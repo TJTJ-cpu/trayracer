@@ -3,11 +3,23 @@
 #include "vec3.h"
 #include "raytracer.h"
 #include "sphere.h"
+#include <chrono>
+#include <iostream>
 
 #define degtorad(angle) angle * MPI / 180
 
+// Define variables for timing
+int FrameCount = 0;
+double AccumulatedFPS = 0.0;
+double elapsedTime = 0.0;
+bool FirstFrameCreate = false;
+
 int main()
 { 
+    // Use for timing, and fps
+	std::chrono::steady_clock::time_point startTime = std::chrono::steady_clock::now();
+	std::chrono::steady_clock::time_point lastFrameTime = startTime;
+
     Display::Window wnd;
     
     wnd.SetTitle("TrayRacer");
@@ -17,8 +29,13 @@ int main()
 
     std::vector<Color> framebuffer;
 
+    // Original
     const unsigned w = 200;
     const unsigned h = 100;
+
+    // Goal
+    //const unsigned w = 1000;
+    //const unsigned h = 500;
     framebuffer.resize(w * h);
     
     int raysPerPixel = 1;
@@ -162,6 +179,7 @@ int main()
     std::vector<Color> framebufferCopy;
     framebufferCopy.resize(w * h);
 
+    std::chrono::steady_clock::time_point currentTime;
     // rendering loop
     while (wnd.IsOpen() && !exit)
     {
@@ -195,6 +213,40 @@ int main()
             rt.Clear();
             frameIndex = 0;
         }
+
+        // FPS Stuff
+        currentTime = std::chrono::steady_clock::now();
+        // Time Between each frame
+        double deltaSecond = std::chrono::duration_cast<std::chrono::milliseconds>(currentTime - lastFrameTime).count() / 1000.0;
+        // Total Time
+        elapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(currentTime - startTime).count() / 1000.0;
+        // Total fps
+        AccumulatedFPS += 1.0 / deltaSecond;
+        if (!FirstFrameCreate && FrameCount > 0)
+        {
+            auto currentTime = std::chrono::steady_clock::now();
+            double FirstFrame = std::chrono::duration_cast<std::chrono::milliseconds>(currentTime - startTime).count();
+            std::cout << "Time to create the first frame: " << FirstFrame << " milliseconds" << std::endl;
+            FirstFrameCreate = true;
+        }
+
+        // Print out every 10 seconds
+        if (elapsedTime >= 10.0)
+        {
+            // Get average FPS
+            double averageFPS = AccumulatedFPS / elapsedTime;
+
+            // Print the result
+            std::cout << "Average FPS over 10 seconds: " << averageFPS << std::endl;
+
+            // Reset variables for the next interval
+            startTime = std::chrono::steady_clock::now();
+            lastFrameTime = startTime;
+            FrameCount = 0;
+            AccumulatedFPS = 0.0;
+            elapsedTime = 0.0;
+        }
+        FrameCount++;
 
         rt.Raytrace();
         frameIndex++;

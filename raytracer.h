@@ -34,6 +34,8 @@ public:
     // update matrices. Called automatically after setting view matrix
     void UpdateMatrices();
 
+    void RenderSection(int startX, int startY, int width, int height, int threadID);
+
     // trace a path and return intersection color
     // n is bounce depth
     Color TracePath(Ray ray, unsigned n);

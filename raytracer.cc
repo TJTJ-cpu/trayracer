@@ -1,5 +1,7 @@
 #include "raytracer.h"
 #include <random>
+#include "random.h"
+#include <thread>
 
 //------------------------------------------------------------------------------
 /**
@@ -14,32 +16,40 @@ Raytracer::Raytracer(unsigned w, unsigned h, std::vector<Color>& frameBuffer, un
     // empty
 }
 
+
 //------------------------------------------------------------------------------
 /**
 */
+
+
 void
 Raytracer::Raytrace()
 {
-    static int leet = 1337;
-    std::mt19937 generator (leet++);
-    std::uniform_real_distribution<float> dis(0.0f, 1.0f);
-
+    //static int leet = 1337;
+    //std::mt19937 generator (leet++);
+    //std::uniform_real_distribution<float> dis(0.0f, 1.0f);
+    float Number = RandomFloat();
     for (int x = 0; x < this->width; ++x)
     {
         for (int y = 0; y < this->height; ++y)
         {
             Color color;
+            Ray ray;
             for (int i = 0; i < this->rpp; ++i)
             {
-                float u = ((float(x + dis(generator)) * (1.0f / this->width)) * 2.0f) - 1.0f;
-                float v = ((float(y + dis(generator)) * (1.0f / this->height)) * 2.0f) - 1.0f;
+                //float u = ((float(x + dis(generator)) * (1.0f / this->width)) * 2.0f) - 1.0f;
+                //float v = ((float(y + dis(generator)) * (1.0f / this->height)) * 2.0f) - 1.0f;
+
+                float u = ((float(x +  Number) * (1.0f / this->width)) * 2.0f) - 1.0f;
+                float v = ((float(y +  Number) * (1.0f / this->height)) * 2.0f) - 1.0f;
 
                 vec3 direction = vec3(u, v, -1.0f);
                 direction = transform(direction, this->frustum);
                 
-                Ray* ray = new Ray(get_position(this->view), direction);
-                color += this->TracePath(*ray, 0);
-                delete ray;
+                //Ray* ray = new Ray(get_position(this->view), direction);
+                 ray =  Ray(get_position(this->view), direction);
+                color += this->TracePath(ray, 0);
+                //delete ray;
             }
 
             // divide by number of samples per pixel, to get the average of the distribution
@@ -66,12 +76,14 @@ Raytracer::TracePath(Ray ray, unsigned n)
 
     if (Raycast(ray, hitPoint, hitNormal, hitObject, distance, this->objects))
     {
-        Ray* scatteredRay = new Ray(hitObject->ScatterRay(ray, hitPoint, hitNormal));
+        //Ray* scatteredRay = new Ray(hitObject->ScatterRay(ray, hitPoint, hitNormal));
+        Ray ScatteredRay(hitObject->ScatterRay(ray, hitPoint, hitNormal));
         if (n < this->bounces)
         {
-            return hitObject->GetColor() * this->TracePath(*scatteredRay, n + 1);
+            //return hitObject->GetColor() * this->TracePath(*scatteredRay, n + 1);
+            return hitObject->GetColor() * this->TracePath(ScatteredRay, n + 1);
         }
-        delete scatteredRay;
+        //delete scatteredRay;
 
         if (n == this->bounces)
         {
@@ -79,7 +91,7 @@ Raytracer::TracePath(Ray ray, unsigned n)
         }
     }
 
-    return this->Skybox(ray.m);
+    return this->Skybox(ray.dir);
 }
 
 //------------------------------------------------------------------------------
@@ -93,45 +105,20 @@ Raytracer::Raycast(Ray ray, vec3& hitPoint, vec3& hitNormal, Object*& hitObject,
     int numHits = 0;
     HitResult hit;
 
-    // First, sort the world objects
-    std::sort(world.begin(), world.end());
-
-    // then add all objects into a remaining objects set of unique objects, so that we don't trace against the same object twice
-    std::vector<Object*> uniqueObjects;
-    for (size_t i = 0; i < world.size(); ++i)
+    for (auto Obj : world)
     {
-        Object* obj = world[i];
-        std::vector<Object*>::iterator it = std::find_if(uniqueObjects.begin(), uniqueObjects.end(), 
-                [obj](const auto& val)
-                {
-                    return (obj->GetName() == val->GetName() && obj->GetId() == val->GetId());
-                }
-            );
-
-        if (it == uniqueObjects.end())
-        {
-            uniqueObjects.push_back(obj);
-        }
-    }
-
-    while (uniqueObjects.size() > 0)
-    {
-        auto objectIt = uniqueObjects.begin();
-        Object* object = *objectIt;
-
-        auto opt = object->Intersect(ray, closestHit.t);
+        auto opt = Obj->Intersect(ray, closestHit.t);
         if (opt.HasValue())
         {
+
             hit = opt.Get();
             assert(hit.t < closestHit.t);
             closestHit = hit;
-            closestHit.object = object;
+            closestHit.object = Obj;
             isHit = true;
             numHits++;
         }
-        uniqueObjects.erase(objectIt);
     }
-
     hitPoint = closestHit.p;
     hitNormal = closestHit.normal;
     hitObject = closestHit.object;

@@ -78,6 +78,15 @@ private:
     volatile bool isZero;
 };
 
+inline vec3 GetNagative(vec3 const& v)
+{
+    vec3 temp;
+    temp.x = -v.x;
+    temp.y = -v.y;
+    temp.z = -v.z;
+    return temp;
+}
+
 // Get length of 3D vector
 inline double len(vec3 const& v)
 {
