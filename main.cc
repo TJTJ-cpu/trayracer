@@ -3,13 +3,14 @@
 #include "vec3.h"
 #include "raytracer.h"
 #include "sphere.h"
+#include <chrono>
+#include <iostream>
 
 #define degtorad(angle) angle * MPI / 180
 
 int main()
 { 
     Display::Window wnd;
-    
     wnd.SetTitle("TrayRacer");
     
     if (!wnd.Open())
@@ -196,7 +197,13 @@ int main()
             frameIndex = 0;
         }
 
-        rt.Raytrace();
+		auto start = std::chrono::high_resolution_clock::now();
+		rt.Raytrace();
+		auto end = std::chrono::high_resolution_clock::now();
+
+        std::chrono::duration<float> frameDuration = end - start;
+        std::cout << frameDuration.count() << std::endl;
+
         frameIndex++;
 
         // Get the average distribution of all samples
