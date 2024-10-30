@@ -37,6 +37,10 @@ int main(int argc, char* argv[])
             std::cout << "MaxBounce: " << maxBounces << std::endl;
         } 
     }
+    std::cout << "Width: " << width << std::endl;
+    std::cout << "Height: " << height << std::endl;
+    std::cout << "Ray Per Pixel: " << RaysPerPixel << std::endl;
+    std::cout << "Sphere Amount: " << SphereAmount << std::endl;
     Display::Window wnd;
     wnd.SetTitle("TrayRacer");
     
@@ -80,6 +84,7 @@ int main(int argc, char* argv[])
 		},
 		mat);
 		rt.AddObject(ground);
+
         //{
         //    Material* mat = new Material();
         //    mat->type = "Conductor";
@@ -229,7 +234,7 @@ int main(int argc, char* argv[])
         std::chrono::duration<float> frameDuration = end - start;
         double DoubleFrameDuration = frameDuration.count();
         // Calculating MRay/S
-        std::cout << "Duration: " << frameDuration.count() << std::endl;
+        std::cout << "Duration: " << frameDuration.count() << " sec" << std::endl;
         std::cout << "Total Number of Rays: " << RayNum << std::endl;
         std::cout << "Total Rays: " << (RayNum / 1'000'000)/DoubleFrameDuration << "MRays/s" << std::endl;
 
