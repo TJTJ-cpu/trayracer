@@ -17,12 +17,13 @@ Raytracer::Raytracer(unsigned w, unsigned h, std::vector<Color>& frameBuffer, un
 //------------------------------------------------------------------------------
 /**
 */
-void
+unsigned int 
 Raytracer::Raytrace()
 {
     static int leet = 1337;
     std::mt19937 generator (leet++);
     std::uniform_real_distribution<float> dis(0.0f, 1.0f);
+    unsigned int RayNum = 0;
 
     for (int x = 0; x < this->width; ++x)
     {
@@ -40,6 +41,7 @@ Raytracer::Raytrace()
                 Ray* ray = new Ray(get_position(this->view), direction);
                 color += this->TracePath(*ray, 0);
                 delete ray;
+                RayNum++;
             }
 
             // divide by number of samples per pixel, to get the average of the distribution
@@ -50,6 +52,7 @@ Raytracer::Raytrace()
             this->frameBuffer[y * this->width + x] += color;
         }
     }
+    return RayNum;
 }
 
 //------------------------------------------------------------------------------

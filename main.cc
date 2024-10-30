@@ -12,8 +12,9 @@ int main(int argc, char* argv[])
 { 
     unsigned width = 300;
     unsigned height = 300;
-    int RaysPerPixel = 2;
-    int SphereAmount = 16;
+    int RaysPerPixel = 1;
+    int SphereAmount = 36;
+    int maxBounces = 5;
     for (int i = 0; i < argc; i++) {
         if (strcmp(argv[i], "-w") == 0) {
             width = std::stoi(argv[i + 1]);
@@ -31,6 +32,10 @@ int main(int argc, char* argv[])
             SphereAmount = std::stoi(argv[i + 1]);
             std::cout << "SphereAmount: " << SphereAmount << std::endl;
         } 
+        else if (strcmp(argv[i], "-b") == 0) {
+            maxBounces = std::stoi(argv[i + 1]);
+            std::cout << "MaxBounce: " << maxBounces << std::endl;
+        } 
     }
     Display::Window wnd;
     wnd.SetTitle("TrayRacer");
@@ -42,7 +47,6 @@ int main(int argc, char* argv[])
 
     framebuffer.resize(width * height);
     
-    int maxBounces = 5;
 
     Raytracer rt = Raytracer(width, height, framebuffer, RaysPerPixel, maxBounces);
 
@@ -185,7 +189,7 @@ int main(int argc, char* argv[])
     framebufferCopy.resize(width * height);
 
     // rendering loop
-    while (wnd.IsOpen() && !exit)
+    //while (wnd.IsOpen() && !exit)
     {
         resetFramebuffer = false;
         moveDir = {0,0,0};
@@ -217,13 +221,17 @@ int main(int argc, char* argv[])
             rt.Clear();
             frameIndex = 0;
         }
-
+        double RayNum;
 		auto start = std::chrono::high_resolution_clock::now();
-		rt.Raytrace();
+		RayNum = rt.Raytrace();
 		auto end = std::chrono::high_resolution_clock::now();
 
         std::chrono::duration<float> frameDuration = end - start;
-        std::cout << frameDuration.count() << std::endl;
+        double DoubleFrameDuration = frameDuration.count();
+        // Calculating MRay/S
+        std::cout << "Duration: " << frameDuration.count() << std::endl;
+        std::cout << "Total Number of Rays: " << RayNum << std::endl;
+        std::cout << "Total Rays: " << (RayNum / 1'000'000)/DoubleFrameDuration << "MRays/s" << std::endl;
 
         frameIndex++;
 
