@@ -8,8 +8,30 @@
 
 #define degtorad(angle) angle * MPI / 180
 
-int main()
+int main(int argc, char* argv[])
 { 
+    unsigned width = 300;
+    unsigned height = 300;
+    int RaysPerPixel = 2;
+    int SphereAmount = 16;
+    for (int i = 0; i < argc; i++) {
+        if (strcmp(argv[i], "-w") == 0) {
+            width = std::stoi(argv[i + 1]);
+			std::cout << "width: " << width << std::endl;
+        }
+        else if (strcmp(argv[i], "-h") == 0) {
+            height = std::stoi(argv[i + 1]);
+			std::cout << "height: " << height << std::endl;
+        }
+        else if (strcmp(argv[i], "-rpp") == 0) {
+            RaysPerPixel = std::stoi(argv[i + 1]);
+            std::cout << "ray per pixel: " << RaysPerPixel << std::endl;
+        }
+        else if (strcmp(argv[i], "-s") == 0) {
+            SphereAmount = std::stoi(argv[i + 1]);
+            std::cout << "SphereAmount: " << SphereAmount << std::endl;
+        } 
+    }
     Display::Window wnd;
     wnd.SetTitle("TrayRacer");
     
@@ -18,14 +40,11 @@ int main()
 
     std::vector<Color> framebuffer;
 
-    const unsigned w = 200;
-    const unsigned h = 100;
-    framebuffer.resize(w * h);
+    framebuffer.resize(width * height);
     
-    int raysPerPixel = 1;
     int maxBounces = 5;
 
-    Raytracer rt = Raytracer(w, h, framebuffer, raysPerPixel, maxBounces);
+    Raytracer rt = Raytracer(width, height, framebuffer, RaysPerPixel, maxBounces);
 
     // Create some objects
     Material* mat = new Material();
@@ -34,65 +53,67 @@ int main()
     mat->roughness = 0.3;
     Sphere* ground = new Sphere(1000, { 0,-1000, -1 }, mat);
     rt.AddObject(ground);
-
-    for (int it = 0; it < 12; it++)
+    
+    std::vector<std::string>MaterialType;
+    std::vector<float> SpanVec;
+    MaterialType = { "Lambertian", "Conductor", "Dielectric"};
+    SpanVec = { 10.0f, 30.0f, 25.0f };
+    for (int it = 0; it < SphereAmount; it++)
     {
-        {
-            Material* mat = new Material();
-                mat->type = "Lambertian";
-                float r = RandomFloat();
-                float g = RandomFloat();
-                float b = RandomFloat();
-                mat->color = { r,g,b };
-                mat->roughness = RandomFloat();
-                const float span = 10.0f;
-                Sphere* ground = new Sphere(
-                    RandomFloat() * 0.7f + 0.2f,
-                    {
-                        RandomFloatNTP() * span,
-                        RandomFloat() * span + 0.2f,
-                        RandomFloatNTP() * span
-                    },
-                    mat);
-            rt.AddObject(ground);
-        }{
-            Material* mat = new Material();
-            mat->type = "Conductor";
-            float r = RandomFloat();
-            float g = RandomFloat();
-            float b = RandomFloat();
-            mat->color = { r,g,b };
-            mat->roughness = RandomFloat();
-            const float span = 30.0f;
-            Sphere* ground = new Sphere(
-                RandomFloat() * 0.7f + 0.2f,
-                {
-                    RandomFloatNTP() * span,
-                    RandomFloat() * span + 0.2f,
-                    RandomFloatNTP() * span
-                },
-                mat);
-            rt.AddObject(ground);
-        }{
-            Material* mat = new Material();
-            mat->type = "Dielectric";
-            float r = RandomFloat();
-            float g = RandomFloat();
-            float b = RandomFloat();
-            mat->color = { r,g,b };
-            mat->roughness = RandomFloat();
-            mat->refractionIndex = 1.65;
-            const float span = 25.0f;
-            Sphere* ground = new Sphere(
-                RandomFloat() * 0.7f + 0.2f,
-                {
-                    RandomFloatNTP() * span,
-                    RandomFloat() * span + 0.2f,
-                    RandomFloatNTP() * span
-                },
-                mat);
-            rt.AddObject(ground);
-        }
+		Material* mat = new Material();
+		mat->type = MaterialType[it % 3];
+		float r = RandomFloat();
+		float g = RandomFloat();
+		float b = RandomFloat();
+		mat->color = { r,g,b };
+		mat->roughness = RandomFloat();
+		Sphere* ground = new Sphere(
+		RandomFloat() * 0.7f + 0.2f,
+		{
+			RandomFloatNTP() * SpanVec[it % 3],
+			RandomFloat() * SpanVec[it % 3], + 0.2f,
+			RandomFloatNTP() * SpanVec[it % 3]
+		},
+		mat);
+		rt.AddObject(ground);
+        //{
+        //    Material* mat = new Material();
+        //    mat->type = "Conductor";
+        //    float r = RandomFloat();
+        //    float g = RandomFloat();
+        //    float b = RandomFloat();
+        //    mat->color = { r,g,b };
+        //    mat->roughness = RandomFloat();
+        //    const float span = 30.0f;
+        //    Sphere* ground = new Sphere(
+        //        RandomFloat() * 0.7f + 0.2f,
+        //        {
+        //            RandomFloatNTP() * span,
+        //            RandomFloat() * span + 0.2f,
+        //            RandomFloatNTP() * span
+        //        },
+        //        mat);
+        //    rt.AddObject(ground);
+        //}{
+        //    Material* mat = new Material();
+        //    mat->type = "Dielectric";
+        //    float r = RandomFloat();
+        //    float g = RandomFloat();
+        //    float b = RandomFloat();
+        //    mat->color = { r,g,b };
+        //    mat->roughness = RandomFloat();
+        //    mat->refractionIndex = 1.65;
+        //    const float span = 25.0f;
+        //    Sphere* ground = new Sphere(
+        //        RandomFloat() * 0.7f + 0.2f,
+        //        {
+        //            RandomFloatNTP() * span,
+        //            RandomFloat() * span + 0.2f,
+        //            RandomFloatNTP() * span
+        //        },
+        //        mat);
+        //    rt.AddObject(ground);
+        //}
     }
     
     bool exit = false;
@@ -161,7 +182,7 @@ int main()
     int frameIndex = 0;
 
     std::vector<Color> framebufferCopy;
-    framebufferCopy.resize(w * h);
+    framebufferCopy.resize(width * height);
 
     // rendering loop
     while (wnd.IsOpen() && !exit)
@@ -222,7 +243,7 @@ int main()
         glClearColor(0, 0, 0, 1.0);
         glClear( GL_COLOR_BUFFER_BIT );
 
-        wnd.Blit((float*)&framebufferCopy[0], w, h);
+        wnd.Blit((float*)&framebufferCopy[0], width, height);
         wnd.SwapBuffers();
     }
 

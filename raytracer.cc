@@ -93,11 +93,29 @@ Raytracer::Raycast(Ray ray, vec3& hitPoint, vec3& hitNormal, Object*& hitObject,
     int numHits = 0;
     HitResult hit;
 
-    // First, sort the world objects
-    std::sort(world.begin(), world.end());
+    //for (Object* object : world)
+    //{
+    //    auto opt = object->Intersect(ray, closestHit.t);
+    //    if (opt.HasValue())
+    //    {
+    //        hit = opt.Get(); 
+    //        assert(hit.t < closestHit.t);
+    //        closestHit = hit;
+    //        closestHit.object = object;
+    //        isHit = true;
+    //        numHits++;
+    //    }
+    //}
 
-    // then add all objects into a remaining objects set of unique objects, so that we don't trace against the same object twice
-    std::vector<Object*> uniqueObjects;
+    //hitPoint = closestHit.p;
+    //hitNormal = closestHit.normal;
+    //hitObject = closestHit.object;
+    //distance = closestHit.t;
+    //
+    //return isHit;
+
+    std::sort(world.begin(), world.end());
+    std::vector<Object*>uniqueObjects;
     for (size_t i = 0; i < world.size(); ++i)
     {
         Object* obj = world[i];
@@ -130,14 +148,16 @@ Raytracer::Raycast(Ray ray, vec3& hitPoint, vec3& hitNormal, Object*& hitObject,
             numHits++;
         }
         uniqueObjects.erase(objectIt);
+
     }
 
-    hitPoint = closestHit.p;
-    hitNormal = closestHit.normal;
-    hitObject = closestHit.object;
-    distance = closestHit.t;
-    
-    return isHit;
+	hitPoint = closestHit.p;
+	hitNormal = closestHit.normal;
+	hitObject = closestHit.object;
+	distance = closestHit.t;
+
+	return isHit;
+
 }
 
 
