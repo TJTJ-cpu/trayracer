@@ -6,7 +6,11 @@
 #include <chrono>
 #include <iostream>
 
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include "stb_image_write.h"
+
 #define degtorad(angle) angle * MPI / 180
+
 
 int main(int argc, char* argv[])
 { 
@@ -66,11 +70,9 @@ int main(int argc, char* argv[])
     std::vector<float> SpanVec;
     MaterialType = { "Lambertian", "Conductor", "Dielectric"};
     SpanVec = { 10.0f, 30.0f, 25.0f };
-    float Size;
     for (int it = 0; it < SphereAmount; it++)
     {
 		Material* mat = new Material();
-		Size = SpanVec[it % 3];
 		mat->type = MaterialType[it % 3];
 		float r = RandomFloat();
 		float g = RandomFloat();
@@ -80,51 +82,12 @@ int main(int argc, char* argv[])
         Sphere* ground = new Sphere(
 		RandomFloat() * 0.7f + 0.2f,
 		{
-			RandomFloatNTP() * Size,
-			RandomFloat() * Size + 0.2f,
-			RandomFloatNTP() * Size
+			RandomFloatNTP() * SpanVec[it % 3],
+			RandomFloat() * SpanVec[it % 3] + 0.2f,
+			RandomFloatNTP() * SpanVec[it % 3] 
 		},
 		mat);
 		rt.AddObject(ground);
-
-       /* {
-            Material* mat = new Material();
-            mat->type = "Conductor";
-            float r = RandomFloat();
-            float g = RandomFloat();
-            float b = RandomFloat();
-            mat->color = { r,g,b };
-            mat->roughness = RandomFloat();
-            const float span = 30.0f;
-            Sphere* ground = new Sphere(
-                RandomFloat() * 0.7f + 0.2f,
-                {
-                    RandomFloatNTP() * span,
-                    RandomFloat() * span + 0.2f,
-                    RandomFloatNTP() * span
-                },
-                mat);
-            rt.AddObject(ground);
-        }{
-            Material* mat = new Material();
-            mat->type = "Dielectric";
-            float r = RandomFloat();
-            float g = RandomFloat();
-            float b = RandomFloat();
-            mat->color = { r,g,b };
-            mat->roughness = RandomFloat();
-            mat->refractionIndex = 1.65;
-            const float span = 25.0f;
-            Sphere* ground = new Sphere(
-                RandomFloat() * 0.7f + 0.2f,
-                {
-                    RandomFloatNTP() * span,
-                    RandomFloat() * span + 0.2f,
-                    RandomFloatNTP() * span
-                },
-                mat);
-            rt.AddObject(ground);
-        }*/
     }
     
     bool exit = false;
@@ -195,7 +158,7 @@ int main(int argc, char* argv[])
     std::vector<Color> framebufferCopy;
     framebufferCopy.resize(width * height);
 
-    // rendering loop
+    /// RENDERING LOOP
     //while (wnd.IsOpen() && !exit)
     {
         resetFramebuffer = false;
@@ -243,6 +206,7 @@ int main(int argc, char* argv[])
         frameIndex++;
 
         // Get the average distribution of all samples
+		std::vector<uint8_t> ImageData;
         {
             size_t p = 0;
             for (Color const& pixel : framebuffer)
@@ -251,9 +215,14 @@ int main(int argc, char* argv[])
                 framebufferCopy[p].r /= frameIndex;
                 framebufferCopy[p].g /= frameIndex;
                 framebufferCopy[p].b /= frameIndex;
+                ImageData.push_back(255 * framebufferCopy[p].r);
+                ImageData.push_back(255 * framebufferCopy[p].g);
+                ImageData.push_back(255 * framebufferCopy[p].b);
                 p++;
             }
         }
+        stbi_flip_vertically_on_write(1);
+		stbi_write_png("Frame.png", width, height, 3, ImageData.data(), width * 3);
 
         glClearColor(0, 0, 0, 1.0);
         glClear( GL_COLOR_BUFFER_BIT );

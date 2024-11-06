@@ -82,7 +82,7 @@ Raytracer::TracePath(Ray ray, unsigned n)
         }
     }
 
-    return this->Skybox(ray.m);
+    return this->Skybox(ray.RayDir);
 }
 
 //------------------------------------------------------------------------------

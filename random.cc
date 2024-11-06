@@ -2,13 +2,13 @@
 
 //------------------------------------------------------------------------------
 /**
-	XorShift128 implementation.
+    XorShift128 implementation.
 */
 unsigned
 FastRandom()
 {
-	// These are predefined to give us the largest
-	// possible sequence of random numbers
+    // These are predefined to give us the largest
+    // possible sequence of random numbers
     static unsigned x = 123456789;
     static unsigned y = 362436069;
     static unsigned z = 521288629;
@@ -16,8 +16,8 @@ FastRandom()
     unsigned t;
     t = x ^ (x << 11);
     x = y;
-	y = z;
-	z = w;
+    y = z;
+    z = w;
     return w = w ^ (w >> 19) ^ (t ^ (t >> 8));
 }
 

@@ -47,8 +47,8 @@ public:
     Optional<HitResult> Intersect(Ray ray, float maxDist) override
     {
         HitResult hit;
-        vec3 oc = ray.b - this->center;
-        vec3 dir = ray.m;
+        vec3 oc = ray.RayStart - this->center;
+        vec3 dir = ray.RayDir;
         float b = dot(oc, dir);
     
         // early out if sphere is "behind" ray
