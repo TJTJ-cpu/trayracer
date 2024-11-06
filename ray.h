@@ -21,7 +21,7 @@ public:
 
     vec3 PointAt(float t)
     {
-        return {b + m * t};
+        return { b + m * t };
     }
 
     // beginning of ray

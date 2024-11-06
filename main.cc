@@ -66,63 +66,65 @@ int main(int argc, char* argv[])
     std::vector<float> SpanVec;
     MaterialType = { "Lambertian", "Conductor", "Dielectric"};
     SpanVec = { 10.0f, 30.0f, 25.0f };
+    float Size;
     for (int it = 0; it < SphereAmount; it++)
     {
 		Material* mat = new Material();
+		Size = SpanVec[it % 3];
 		mat->type = MaterialType[it % 3];
 		float r = RandomFloat();
 		float g = RandomFloat();
 		float b = RandomFloat();
 		mat->color = { r,g,b };
 		mat->roughness = RandomFloat();
-		Sphere* ground = new Sphere(
+        Sphere* ground = new Sphere(
 		RandomFloat() * 0.7f + 0.2f,
 		{
-			RandomFloatNTP() * SpanVec[it % 3],
-			RandomFloat() * SpanVec[it % 3], + 0.2f,
-			RandomFloatNTP() * SpanVec[it % 3]
+			RandomFloatNTP() * Size,
+			RandomFloat() * Size + 0.2f,
+			RandomFloatNTP() * Size
 		},
 		mat);
 		rt.AddObject(ground);
 
-        //{
-        //    Material* mat = new Material();
-        //    mat->type = "Conductor";
-        //    float r = RandomFloat();
-        //    float g = RandomFloat();
-        //    float b = RandomFloat();
-        //    mat->color = { r,g,b };
-        //    mat->roughness = RandomFloat();
-        //    const float span = 30.0f;
-        //    Sphere* ground = new Sphere(
-        //        RandomFloat() * 0.7f + 0.2f,
-        //        {
-        //            RandomFloatNTP() * span,
-        //            RandomFloat() * span + 0.2f,
-        //            RandomFloatNTP() * span
-        //        },
-        //        mat);
-        //    rt.AddObject(ground);
-        //}{
-        //    Material* mat = new Material();
-        //    mat->type = "Dielectric";
-        //    float r = RandomFloat();
-        //    float g = RandomFloat();
-        //    float b = RandomFloat();
-        //    mat->color = { r,g,b };
-        //    mat->roughness = RandomFloat();
-        //    mat->refractionIndex = 1.65;
-        //    const float span = 25.0f;
-        //    Sphere* ground = new Sphere(
-        //        RandomFloat() * 0.7f + 0.2f,
-        //        {
-        //            RandomFloatNTP() * span,
-        //            RandomFloat() * span + 0.2f,
-        //            RandomFloatNTP() * span
-        //        },
-        //        mat);
-        //    rt.AddObject(ground);
-        //}
+       /* {
+            Material* mat = new Material();
+            mat->type = "Conductor";
+            float r = RandomFloat();
+            float g = RandomFloat();
+            float b = RandomFloat();
+            mat->color = { r,g,b };
+            mat->roughness = RandomFloat();
+            const float span = 30.0f;
+            Sphere* ground = new Sphere(
+                RandomFloat() * 0.7f + 0.2f,
+                {
+                    RandomFloatNTP() * span,
+                    RandomFloat() * span + 0.2f,
+                    RandomFloatNTP() * span
+                },
+                mat);
+            rt.AddObject(ground);
+        }{
+            Material* mat = new Material();
+            mat->type = "Dielectric";
+            float r = RandomFloat();
+            float g = RandomFloat();
+            float b = RandomFloat();
+            mat->color = { r,g,b };
+            mat->roughness = RandomFloat();
+            mat->refractionIndex = 1.65;
+            const float span = 25.0f;
+            Sphere* ground = new Sphere(
+                RandomFloat() * 0.7f + 0.2f,
+                {
+                    RandomFloatNTP() * span,
+                    RandomFloat() * span + 0.2f,
+                    RandomFloatNTP() * span
+                },
+                mat);
+            rt.AddObject(ground);
+        }*/
     }
     
     bool exit = false;
