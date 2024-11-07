@@ -16,8 +16,16 @@ public:
     Raytracer(unsigned w, unsigned h, std::vector<Color>& frameBuffer, unsigned rpp, unsigned bounces);
     ~Raytracer() { }
 
+    unsigned AssignJob();
+
+    Color GetColor(float u, float v, int x, int y);
+
+    void AssignColor(Color color, int x, int y);
+
     // start raytracing!
     unsigned int Raytrace();
+
+    std::pair<int, int> indexToXY(size_t index) const;
 
     // add object to scene
     void AddObject(Object* obj);

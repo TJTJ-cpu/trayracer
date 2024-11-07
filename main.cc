@@ -14,8 +14,8 @@
 
 int main(int argc, char* argv[])
 { 
-    unsigned width = 300;
-    unsigned height = 300;
+    unsigned width = 500;
+    unsigned height = 500;
     int RaysPerPixel = 1;
     int SphereAmount = 36;
     int maxBounces = 5;
@@ -189,7 +189,9 @@ int main(int argc, char* argv[])
         }
         double RayNum;
 		auto start = std::chrono::high_resolution_clock::now();
-		RayNum = rt.Raytrace();
+        // Original
+		//RayNum = rt.Raytrace();
+		RayNum = rt.AssignJob();
 		auto end = std::chrono::high_resolution_clock::now();
 
         std::chrono::duration<float> frameDuration = end - start;

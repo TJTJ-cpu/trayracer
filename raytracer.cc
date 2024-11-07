@@ -1,5 +1,8 @@
 #include "raytracer.h"
 #include <random>
+#include <thread>
+#include <future>
+#include <atomic>
 
 //------------------------------------------------------------------------------
 /**
@@ -17,6 +20,90 @@ Raytracer::Raytracer(unsigned w, unsigned h, std::vector<Color>& frameBuffer, un
 //------------------------------------------------------------------------------
 /**
 */
+
+unsigned int 
+Raytracer::AssignJob()
+{
+    // Max Pixels
+    size_t MaxPixel = width * height;
+    int Cores = std::thread::hardware_concurrency();
+    std::atomic<size_t> PixelCounter(0);
+    std::vector<std::thread> Threads;
+
+    static int leet = 1337;
+    std::mt19937 generator(leet++);
+    std::uniform_real_distribution<float> dis(0.0f, 1.0f);
+    unsigned int RayNum = 0;
+
+    // Spawn  threads
+    for (int i = 0; i < Cores; i++) {
+        Threads.emplace_back([&]() {
+            while (true) {
+                size_t index = PixelCounter.fetch_add(1);
+
+                // Base Case
+                if (index >= MaxPixel) 
+                    break;
+
+                auto [x, y] = indexToXY(index);
+                Color color;
+
+                for (int z = 0; z < rpp; z++) {
+                    float u = ((float(x) + dis(generator)) * (1.0f / width)) * 2.0f - 1.0f;
+                    float v = ((float(y) + dis(generator)) * (1.0f / height)) * 2.0f - 1.0f;
+
+                    color += GetColor(u, v, x, y);
+                    RayNum++;
+                }
+
+                color.r /= rpp;
+                color.g /= rpp;
+                color.b /= rpp;
+
+                AssignColor(color, x, y);
+            }
+		});
+    }
+
+    for (auto& thread : Threads) {
+        thread.join();
+    }
+
+    return RayNum;
+}
+
+Color Raytracer::GetColor(float u, float v, int x, int y) {
+
+	vec3 direction = vec3(u, v, -1.0f);
+	direction = transform(direction, this->frustum);
+    Color color;
+
+	Ray* ray = new Ray(get_position(this->view), direction);
+	color = this->TracePath(*ray, 0);
+	delete ray;
+    return color;
+}
+
+void
+Raytracer::AssignColor(Color color, int x, int y) {
+
+	color.r /= this->rpp;
+	color.g /= this->rpp;
+	color.b /= this->rpp;
+
+	this->frameBuffer[y * this->width + x] += color;
+}
+
+std::pair<int, int> Raytracer::indexToXY(size_t index) const {
+    int x = index % width;
+    int y = index / width;
+    return std::make_pair(x, y);
+}
+
+//------------------------------------------------------------------------------
+/**
+*/
+
 unsigned int 
 Raytracer::Raytrace()
 {
