@@ -98,15 +98,10 @@ Raytracer::Raycast(Ray ray, vec3& hitPoint, vec3& hitNormal, Object*& hitObject,
 
     for (Object* object : world)
     {
-        // ORIGINAL
-        //auto opt = object->Intersect(ray, closestHit.t);
         hit = object->Intersect(ray, closestHit.t);
-        //if (opt.HasValue())
         if (hit.HasValue())
         {
-            //hit = opt.Get(); 
             closestHit = hit;
-            //assert(hit.t < closestHit.t);
             closestHit.object = object;
             isHit = true;
             numHits++;
@@ -119,51 +114,6 @@ Raytracer::Raycast(Ray ray, vec3& hitPoint, vec3& hitNormal, Object*& hitObject,
     distance = closestHit.t;
     
     return isHit;
-
- //   std::sort(world.begin(), world.end());
- //   std::vector<Object*>uniqueObjects;
- //   for (size_t i = 0; i < world.size(); ++i)
- //   {
- //       Object* obj = world[i];
- //       std::vector<Object*>::iterator it = std::find_if(uniqueObjects.begin(), uniqueObjects.end(), 
- //               [obj](const auto& val)
- //               {
- //                   return (obj->GetName() == val->GetName() && obj->GetId() == val->GetId());
- //               }
- //           );
-
- //       if (it == uniqueObjects.end())
- //       {
- //           uniqueObjects.push_back(obj);
- //       }
- //   }
-
- //   while (uniqueObjects.size() > 0)
- //   {
- //       auto objectIt = uniqueObjects.begin();
- //       Object* object = *objectIt;
-
- //       auto opt = object->Intersect(ray, closestHit.t);
- //       if (opt.HasValue())
- //       {
- //           hit = opt.Get();
- //           assert(hit.t < closestHit.t);
- //           closestHit = hit;
- //           closestHit.object = object;
- //           isHit = true;
- //           numHits++;
- //       }
- //       uniqueObjects.erase(objectIt);
-
- //   }
-
-	//hitPoint = closestHit.p;
-	//hitNormal = closestHit.normal;
-	//hitObject = closestHit.object;
-	//distance = closestHit.t;
-
-	//return isHit;
-
 }
 
 

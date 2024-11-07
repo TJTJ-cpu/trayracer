@@ -29,56 +29,6 @@ struct HitResult
     }
 };
 
-//template<class TYPE>
-//class Optional
-//{
-//public:
-//    Optional() {}
-//    Optional(HitResult hit) : hasValue(true)
-//    {
-//        this->value = std::make_shared<HitResult>(hit);
-//    }
-//
-//    bool HasValue()
-//    {
-//        // check if this object has a value.
-//        if (this->hasValue)
-//        {
-//            // doublecheck the value
-//            if (value == nullptr)
-//            {
-//                return false;
-//            }
-//            if (value != nullptr)
-//            {
-//                // doublecheck the value content.
-//                if (value->object == nullptr)
-//                {
-//                    return false;
-//                }
-//                if (value->normal.IsZero())
-//                {
-//                    return false;
-//                }
-//            }
-//        }
-//        else
-//        {
-//            return false;
-//        }
-//        return true;
-//    }
-//    HitResult Get()
-//    {
-//        assert(this->HasValue());
-//        return *value;
-//    }
-//
-//private:
-//    bool hasValue = false;
-//    std::shared_ptr<HitResult> value = nullptr;
-//};
-
 //------------------------------------------------------------------------------
 /**
 */
