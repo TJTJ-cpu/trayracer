@@ -98,12 +98,15 @@ Raytracer::Raycast(Ray ray, vec3& hitPoint, vec3& hitNormal, Object*& hitObject,
 
     for (Object* object : world)
     {
-        auto opt = object->Intersect(ray, closestHit.t);
-        if (opt.HasValue())
+        // ORIGINAL
+        //auto opt = object->Intersect(ray, closestHit.t);
+        hit = object->Intersect(ray, closestHit.t);
+        //if (opt.HasValue())
+        if (hit.HasValue())
         {
-            hit = opt.Get(); 
-            assert(hit.t < closestHit.t);
+            //hit = opt.Get(); 
             closestHit = hit;
+            //assert(hit.t < closestHit.t);
             closestHit.object = object;
             isHit = true;
             numHits++;
