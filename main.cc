@@ -5,6 +5,7 @@
 #include "sphere.h"
 #include <chrono>
 #include <iostream>
+#include <thread>
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
@@ -14,33 +15,38 @@
 
 int main(int argc, char* argv[])
 { 
-    unsigned width = 500;
-    unsigned height = 500;
-    int RaysPerPixel = 1;
-    int SphereAmount = 36;
-    int maxBounces = 5;
+    unsigned w = 1000;
+    unsigned h = 1000;
+    int rpp = 1;
+    int ball = 36;
+    int mb = 5;
     for (int i = 0; i < argc; i++) {
         if (strcmp(argv[i], "-w") == 0) {
-            width = std::stoi(argv[i + 1]);
-			std::cout << "width: " << width << std::endl;
+            w = std::stoi(argv[i + 1]);
+			std::cout << "width: " << w << std::endl;
         }
         else if (strcmp(argv[i], "-h") == 0) {
-            height = std::stoi(argv[i + 1]);
-			std::cout << "height: " << height << std::endl;
+            h = std::stoi(argv[i + 1]);
+			std::cout << "height: " << h << std::endl;
         }
         else if (strcmp(argv[i], "-rpp") == 0) {
-            RaysPerPixel = std::stoi(argv[i + 1]);
-            std::cout << "ray per pixel: " << RaysPerPixel << std::endl;
+            rpp = std::stoi(argv[i + 1]);
+            std::cout << "ray per pixel: " << rpp << std::endl;
         }
         else if (strcmp(argv[i], "-s") == 0) {
-            SphereAmount = std::stoi(argv[i + 1]);
-            std::cout << "SphereAmount: " << SphereAmount << std::endl;
+            ball = std::stoi(argv[i + 1]);
+            std::cout << "SphereAmount: " << ball << std::endl;
         } 
         else if (strcmp(argv[i], "-b") == 0) {
-            maxBounces = std::stoi(argv[i + 1]);
-            std::cout << "MaxBounce: " << maxBounces << std::endl;
+            mb = std::stoi(argv[i + 1]);
+            std::cout << "MaxBounce: " << mb << std::endl;
         } 
     }
+    const int width = w;
+    const int height = h;
+    const int RaysPerPixel = rpp;
+    const int SphereAmount = ball;
+    const int maxBounces = mb;
     Display::Window wnd;
     wnd.SetTitle("TrayRacer");
     
@@ -154,8 +160,13 @@ int main(int argc, char* argv[])
     std::vector<Color> framebufferCopy;
     framebufferCopy.resize(width * height);
 
+    std::vector<std::thread> Threads;
+
     /// RENDERING LOOP
     //while (wnd.IsOpen() && !exit)
+	//auto start2 = std::chrono::high_resolution_clock::now();
+    //for (int i = 0; i < 10; i ++)
+    rt.Pool.SpawnThread();
     {
         resetFramebuffer = false;
         moveDir = {0,0,0};
@@ -191,7 +202,7 @@ int main(int argc, char* argv[])
 		auto start = std::chrono::high_resolution_clock::now();
         // Original
 		//RayNum = rt.Raytrace();
-		RayNum = rt.AssignJob();
+        RayNum = rt.AssignJob();
 		auto end = std::chrono::high_resolution_clock::now();
 
         std::chrono::duration<float> frameDuration = end - start;
@@ -233,7 +244,11 @@ int main(int argc, char* argv[])
 
         wnd.Blit((float*)&framebufferCopy[0], width, height);
         wnd.SwapBuffers();
+		rt.Pool.Stop();
     }
+	//auto end2 = std::chrono::high_resolution_clock::now();
+	//std::chrono::duration<float> frameDuration2 = end2 - start2;
+	//std::cout << "Duration: " << frameDuration2.count() << " sec" << std::endl;
 
     if (wnd.IsOpen())
         wnd.Close();

@@ -1,8 +1,10 @@
 #include "raytracer.h"
+#include "threadPool.h"
 #include <random>
 #include <thread>
 #include <future>
 #include <atomic>
+#include <iostream>
 
 //------------------------------------------------------------------------------
 /**
@@ -13,10 +15,14 @@ Raytracer::Raytracer(unsigned w, unsigned h, std::vector<Color>& frameBuffer, un
     bounces(bounces),
     width(w),
     height(h)
-{
-    // empty
+{ 
+    Pool.SpawnThread();
 }
 
+Raytracer::~Raytracer() 
+{ 
+    Pool.Stop();
+}
 //------------------------------------------------------------------------------
 /**
 */
@@ -27,8 +33,9 @@ Raytracer::AssignJob()
     // Max Pixels
     size_t MaxPixel = width * height;
     int Cores = std::thread::hardware_concurrency();
+    Cores = 7;
     std::atomic<size_t> PixelCounter(0);
-    std::vector<std::thread> Threads;
+	std::vector<std::thread> Threads;
 
     static int leet = 1337;
     std::mt19937 generator(leet++);
@@ -38,32 +45,35 @@ Raytracer::AssignJob()
     // Spawn  threads
     for (int i = 0; i < Cores; i++) {
         Threads.emplace_back([&]() {
+		//Pool.QueueJob([&]() {
             while (true) {
+				//static int leet = 1337;
+				//std::mt19937 generator(leet++);
+				//std::uniform_real_distribution<float> dis(0.0f, 1.0f);
                 size_t index = PixelCounter.fetch_add(1);
 
                 // Base Case
-                if (index >= MaxPixel) 
+                if (index >= MaxPixel)
                     break;
 
                 auto [x, y] = indexToXY(index);
+				float u = ((float(x) + dis(generator)) * (1.0f / width)) * 2.0f - 1.0f;
+				float v = ((float(y) + dis(generator)) * (1.0f / height)) * 2.0f - 1.0f;
                 Color color;
 
                 for (int z = 0; z < rpp; z++) {
-                    float u = ((float(x) + dis(generator)) * (1.0f / width)) * 2.0f - 1.0f;
-                    float v = ((float(y) + dis(generator)) * (1.0f / height)) * 2.0f - 1.0f;
-
                     color += GetColor(u, v, x, y);
                     RayNum++;
                 }
-
-                color.r /= rpp;
-                color.g /= rpp;
-                color.b /= rpp;
 
                 AssignColor(color, x, y);
             }
 		});
     }
+
+    /*while (Pool.Busy())
+    {
+    }*/
 
     for (auto& thread : Threads) {
         thread.join();
@@ -78,20 +88,19 @@ Color Raytracer::GetColor(float u, float v, int x, int y) {
 	direction = transform(direction, this->frustum);
     Color color;
 
-	Ray* ray = new Ray(get_position(this->view), direction);
-	color = this->TracePath(*ray, 0);
-	delete ray;
+	Ray ray = Ray(get_position(this->view), direction);
+	color = this->TracePath(ray, 0);
     return color;
 }
 
 void
 Raytracer::AssignColor(Color color, int x, int y) {
-
 	color.r /= this->rpp;
 	color.g /= this->rpp;
 	color.b /= this->rpp;
 
 	this->frameBuffer[y * this->width + x] += color;
+
 }
 
 std::pair<int, int> Raytracer::indexToXY(size_t index) const {
@@ -156,12 +165,14 @@ Raytracer::TracePath(Ray ray, unsigned n)
 
     if (Raycast(ray, hitPoint, hitNormal, hitObject, distance, this->objects))
     {
-        Ray* scatteredRay = new Ray(hitObject->ScatterRay(ray, hitPoint, hitNormal));
+        //Ray* scatteredRay = new Ray(hitObject->ScatterRay(ray, hitPoint, hitNormal));
+        Ray scatteredRay =  Ray(hitObject->ScatterRay(ray, hitPoint, hitNormal));
         if (n < this->bounces)
         {
-            return hitObject->GetColor() * this->TracePath(*scatteredRay, n + 1);
+            //return hitObject->GetColor() * this->TracePath(*scatteredRay, n + 1);
+            return hitObject->GetColor() * this->TracePath(scatteredRay, n + 1);
         }
-        delete scatteredRay;
+        //delete scatteredRay;
 
         if (n == this->bounces)
         {

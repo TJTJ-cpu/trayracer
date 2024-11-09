@@ -6,6 +6,7 @@
 #include "ray.h"
 #include "object.h"
 #include <float.h>
+#include "threadPool.h"
 
 //------------------------------------------------------------------------------
 /**
@@ -14,7 +15,9 @@ class Raytracer
 {
 public:
     Raytracer(unsigned w, unsigned h, std::vector<Color>& frameBuffer, unsigned rpp, unsigned bounces);
-    ~Raytracer() { }
+    ~Raytracer();
+
+    ThreadPool Pool;
 
     unsigned AssignJob();
 
