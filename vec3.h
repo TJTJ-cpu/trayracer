@@ -55,6 +55,9 @@ public:
     vec3 operator-(vec3 const& rhs) { return {x - rhs.x, y - rhs.y, z - rhs.z};}
     vec3 operator-() { return {-x, -y, -z};}
     vec3 operator*(float const c) { return {x * c, y * c, z * c};}
+    vec3 operator/(double const c) const { return vec3(x / c, y / c, z / c);
+    }
+
 
     double x, y, z;
 
@@ -98,6 +101,22 @@ inline vec3 normalize(vec3 v)
     return vec3(ret);
 
     return vec3(v.x / l, v.y / l, v.z / l);
+}
+
+inline vec3 min(const vec3& a, const vec3& b) {
+    return vec3(
+        a.x < b.x ? a.x : b.x,
+        a.y < b.y ? a.y : b.y,
+        a.z < b.z ? a.z : b.z
+    );
+}
+
+inline vec3 max(const vec3& a, const vec3& b) {
+    return vec3(
+        a.x > b.x ? a.x : b.x,
+        a.y > b.y ? a.y : b.y,
+        a.z > b.z ? a.z : b.z
+    );
 }
 
 //inline void vec3::UpdateIsNormalizedVariable()

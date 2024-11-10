@@ -17,8 +17,8 @@ int main(int argc, char* argv[])
 { 
     unsigned w = 1000;
     unsigned h = 1000;
-    int rpp = 1;
-    int ball = 36;
+    int rpp = 2;
+    int ball = 48;
     int mb = 5;
     for (int i = 0; i < argc; i++) {
         if (strcmp(argv[i], "-w") == 0) {
