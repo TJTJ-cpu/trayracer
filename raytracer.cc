@@ -15,17 +15,17 @@ Raytracer::Raytracer(unsigned w, unsigned h, std::vector<Color>& frameBuffer, un
     bounces(bounces),
     width(w),
     height(h)
-{ 
-    Pool.SpawnThread();
-}
+{}
 
-Raytracer::~Raytracer() 
-{ 
-    Pool.Stop();
-}
+Raytracer::~Raytracer() {}
 //------------------------------------------------------------------------------
 /**
 */
+
+
+void Raytracer::SetUpNode(BoundingBox Box, std::vector<Sphere> Spheres) {
+    MainNode = new Node(Box, Spheres);
+}
 
 unsigned int 
 Raytracer::AssignJob()
@@ -186,6 +186,36 @@ Raytracer::TracePath(Ray ray, unsigned n)
 //------------------------------------------------------------------------------
 /**
 */
+
+bool
+Raytracer::BVHRaycast(Ray ray, vec3& hitPoint, vec3& hitNormal, Object*& hitObject, float& distance, std::vector<Object*> world)
+{
+    bool isHit = false;
+    HitResult closestHit;
+    int numHits = 0;
+    HitResult hit;
+
+    hit = MainNode->BVHIntersect(this->MainNode, ray);
+    //for (Object* object : world)
+    //{
+    //    hit = object->Intersect(ray);
+        if (hit.HasValue())
+        {
+            closestHit = hit;
+            closestHit.object = hit.object;
+            isHit = true;
+            numHits++;
+        }
+    //}
+
+    hitPoint = closestHit.p;
+    hitNormal = closestHit.normal;
+    hitObject = closestHit.object;
+    distance = closestHit.t;
+    
+    return isHit;
+}
+
 bool
 Raytracer::Raycast(Ray ray, vec3& hitPoint, vec3& hitNormal, Object*& hitObject, float& distance, std::vector<Object*> world)
 {

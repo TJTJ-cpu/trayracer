@@ -7,6 +7,7 @@
 #include "object.h"
 #include <float.h>
 #include "threadPool.h"
+#include "bvh.h"
 
 //------------------------------------------------------------------------------
 /**
@@ -17,9 +18,11 @@ public:
     Raytracer(unsigned w, unsigned h, std::vector<Color>& frameBuffer, unsigned rpp, unsigned bounces);
     ~Raytracer();
 
-    ThreadPool Pool;
+    Node *MainNode;
 
     unsigned AssignJob();
+
+    void SetUpNode(BoundingBox Box, std::vector<Sphere> spheres);
 
     Color GetColor(float u, float v, int x, int y);
 
@@ -34,7 +37,9 @@ public:
     void AddObject(Object* obj);
 
     // single raycast, find object
-    static bool Raycast(Ray ray, vec3& hitPoint, vec3& hitNormal, Object*& hitObject, float& distance, std::vector<Object*> objects);
+    //static bool Raycast(Ray ray, vec3& hitPoint, vec3& hitNormal, Object*& hitObject, float& distance, std::vector<Object*> objects);
+    bool Raycast(Ray ray, vec3& hitPoint, vec3& hitNormal, Object*& hitObject, float& distance, std::vector<Object*> objects);
+    bool BVHRaycast(Ray ray, vec3& hitPoint, vec3& hitNormal, Object*& hitObject, float& distance, std::vector<Object*> objects);
 
     // set camera matrix
     void SetViewMatrix(mat4 val);
@@ -74,7 +79,6 @@ public:
     // Go from canonical to view frustum
     mat4 frustum;
 
-private:
     std::vector<Object*> objects;
 };
 

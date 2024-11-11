@@ -6,6 +6,7 @@
 #include <chrono>
 #include <iostream>
 #include <thread>
+#include "bvh.h"
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
@@ -18,7 +19,7 @@ int main(int argc, char* argv[])
     unsigned w = 1000;
     unsigned h = 1000;
     int rpp = 2;
-    int ball = 48;
+    int ball = 100;
     int mb = 5;
     for (int i = 0; i < argc; i++) {
         if (strcmp(argv[i], "-w") == 0) {
@@ -69,6 +70,7 @@ int main(int argc, char* argv[])
     rt.AddObject(ground);
     
     std::vector<std::string>MaterialType;
+    std::vector<Sphere> Spheres;
     std::vector<float> SpanVec;
     MaterialType = { "Lambertian", "Conductor", "Dielectric"};
     SpanVec = { 10.0f, 30.0f, 25.0f };
@@ -90,6 +92,7 @@ int main(int argc, char* argv[])
 		},
 		mat);
 		rt.AddObject(ground);
+        Spheres.push_back(*ground);
     }
     
     bool exit = false;
@@ -161,12 +164,20 @@ int main(int argc, char* argv[])
     framebufferCopy.resize(width * height);
 
     std::vector<std::thread> Threads;
+    /// SET UP BVH
+	auto start = std::chrono::high_resolution_clock::now();
+    BoundingBox Box;
+    rt.SetUpNode(Box, Spheres);
+	auto end = std::chrono::high_resolution_clock::now();
+	std::chrono::duration<float> frameDuration = end - start;
+	double DoubleFrameDuration = frameDuration.count();
+    std::cout << "Time to create BVH: " << DoubleFrameDuration << std::endl;
+
 
     /// RENDERING LOOP
     //while (wnd.IsOpen() && !exit)
 	//auto start2 = std::chrono::high_resolution_clock::now();
     //for (int i = 0; i < 10; i ++)
-    rt.Pool.SpawnThread();
     {
         resetFramebuffer = false;
         moveDir = {0,0,0};
@@ -244,7 +255,6 @@ int main(int argc, char* argv[])
 
         wnd.Blit((float*)&framebufferCopy[0], width, height);
         wnd.SwapBuffers();
-		rt.Pool.Stop();
     }
 	//auto end2 = std::chrono::high_resolution_clock::now();
 	//std::chrono::duration<float> frameDuration2 = end2 - start2;
