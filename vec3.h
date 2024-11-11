@@ -55,7 +55,29 @@ public:
     vec3 operator-(vec3 const& rhs) { return {x - rhs.x, y - rhs.y, z - rhs.z};}
     vec3 operator-() { return {-x, -y, -z};}
     vec3 operator*(float const c) { return {x * c, y * c, z * c};}
-    vec3 operator/(double const c) const { return vec3(x / c, y / c, z / c);
+    vec3 operator/(double const c) const { return vec3(x / c, y / c, z / c); }
+
+    double& operator[](const int i)
+    {
+        if (i == 0)
+            return x;
+        else if (i == 1)
+            return y;
+        else if (i == 2)
+            return z;
+        else
+            assert(false && "Out of bound");
+    }
+    double const& operator[](const int i) const
+    {
+        if (i == 0)
+            return x;
+        else if (i == 1)
+            return y;
+        else if (i == 2)
+            return z;
+        else
+            assert(false && "Out of bound");
     }
 
 
@@ -72,11 +94,6 @@ public:
     //}
 
 private:
-    //void UpdateIsNormalizedVariable();
-    //void UpdateIsZeroVariable();
-
-    //volatile bool isNormalized;
-    //volatile bool isZero;
 };
 
 // Get length of 3D vector
@@ -117,6 +134,10 @@ inline vec3 max(const vec3& a, const vec3& b) {
         a.y > b.y ? a.y : b.y,
         a.z > b.z ? a.z : b.z
     );
+}
+
+inline int max(const int& a, const int& b) {
+    return a >= b ? a : b;
 }
 
 //inline void vec3::UpdateIsNormalizedVariable()

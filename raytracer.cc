@@ -196,7 +196,7 @@ Raytracer::Raycast(Ray ray, vec3& hitPoint, vec3& hitNormal, Object*& hitObject,
 
     for (Object* object : world)
     {
-        hit = object->Intersect(ray, closestHit.t);
+        hit = object->Intersect(ray);
         if (hit.HasValue())
         {
             closestHit = hit;
