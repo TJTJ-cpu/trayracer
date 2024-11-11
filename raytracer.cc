@@ -33,7 +33,8 @@ Raytracer::AssignJob()
     // Max Pixels
     size_t MaxPixel = width * height;
     int Cores = std::thread::hardware_concurrency();
-    Cores = 7;
+    if (Cores > 7)
+		Cores = 7;
     std::atomic<size_t> PixelCounter(0);
 	std::vector<std::thread> Threads;
 
@@ -163,16 +164,13 @@ Raytracer::TracePath(Ray ray, unsigned n)
     Object* hitObject = nullptr;
     float distance = FLT_MAX;
 
-    if (Raycast(ray, hitPoint, hitNormal, hitObject, distance, this->objects))
+    if (BVHRaycast(ray, hitPoint, hitNormal, hitObject, distance, this->objects))
     {
-        //Ray* scatteredRay = new Ray(hitObject->ScatterRay(ray, hitPoint, hitNormal));
         Ray scatteredRay =  Ray(hitObject->ScatterRay(ray, hitPoint, hitNormal));
         if (n < this->bounces)
         {
-            //return hitObject->GetColor() * this->TracePath(*scatteredRay, n + 1);
             return hitObject->GetColor() * this->TracePath(scatteredRay, n + 1);
         }
-        //delete scatteredRay;
 
         if (n == this->bounces)
         {

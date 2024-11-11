@@ -14,8 +14,8 @@ class BoundingBox;
 class BoundingBox 
 {
 public:
-	vec3 Min;
-	vec3 Max;
+	vec3 Min = vec3(0,0,0);
+	vec3 Max = vec3(0,0,0);
 	vec3 Center = (Min + Max) / 2;
 	bool bHasObject = false;
 
@@ -61,7 +61,7 @@ public:
 	}
 
 	vec3 Size() {
-		return this->Max = this->Min;
+		return this->Max - this->Min;
 	}
 
 };
@@ -123,19 +123,20 @@ public:
 	void SplitNode(Node* parent, int depth) {
 		const int MaxDepth = 32;
 
-		if (depth == MaxDepth || !parent->bounds.bHasObject) {
+		if (depth == MaxDepth || !parent->bounds.bHasObject || parent->spheres.size() <= 3) {
 			return;
 		}
 
 		vec3 size = parent->bounds.Size();
 		int SpiltAxis = size.x > max(size.y, size.z) ? 0 : size.y > size.z ? 1 : 2;
 		float SplitPos = parent->bounds.Center[SpiltAxis];
-		//std::cout << "Depth-> " << depth << std::endl;
-		//std::cout << "Object Count: " << parent->spheres.size() << std::endl;
-		//std::cout << "x: " << size.x << ", y: " << size.y << ", z: " << size.z << std::endl;
-		//std::cout << "SpiltAxis: " << SpiltAxis << std::endl;
-		//std::cout << "SplitPos: " << SplitPos << std::endl;
-		//std::cout << std::endl;
+		std::cout << std::endl;
+		std::cout << "Depth-> " << depth << std::endl;
+		std::cout << "Object Count: " << parent->spheres.size() << std::endl;
+		std::cout << "SIZE-> x: " << size.x << ", y: " << size.y << ", z: " << size.z << std::endl;
+		std::cout << "SpiltAxis: " << SpiltAxis << std::endl;
+		std::cout << "SplitPos: " << SplitPos << std::endl;
+		std::cout << std::endl;
 
 		parent->ChildA = new Node();
 		parent->ChildB = new Node();
@@ -145,6 +146,8 @@ public:
 			Node *Child = bInA ? parent->ChildA : parent->ChildB;
 			Child->AddSphere(sphere);
 			Child->bounds.GrowToInclude(sphere);
+			size = Child->bounds.Size();
+			std::cout << "x: " << size.x << ", y: " << size.y << ", z: " << size.z << std::endl;
 		}
 		SplitNode(parent->ChildA, depth + 1);
 		SplitNode(parent->ChildB, depth + 1);
@@ -152,25 +155,36 @@ public:
 
 	HitResult BVHIntersect(Node *parent, const Ray& ray) const {
 		HitResult hit;
+
 		if (parent->spheres.empty())
 			return hit;
+
 		if (parent->ChildA == nullptr && parent->ChildB == nullptr) 
 		{
+			/// TO DO 
+			// LOOP THROUGH IT AND THEN GET THE CLOSEST SPHERE
 			for (Sphere sphere : parent->spheres) {
-				hit = sphere.Intersect(ray);
-				return hit;
+				HitResult SphereHit = sphere.Intersect(ray);
+				if (SphereHit.HasValue() && SphereHit.t < hit.t)
+					hit = SphereHit;
 			}
+			return hit;
 		}
 		HitResult hitA, hitB;
 
 		if (parent->ChildA && parent->ChildA->bounds.Intersection(ray))
 			hitA = BVHIntersect(parent->ChildA, ray);
+
 		if (parent->ChildB && parent->ChildB->bounds.Intersection(ray))
-			hitA = BVHIntersect(parent->ChildB, ray);
-	}
+			hitB = BVHIntersect(parent->ChildB, ray);
 
-	bool IntersectNode(const Node* node, const Ray& ray) const {
+		if (hitA.HasValue() && hitA.t < hit.t)
+			hit = hitA;
 
+		if (hitB.HasValue() && hitB.t < hit.t)
+			hit = hitB;
+
+		return hit;
 	}
 };
 

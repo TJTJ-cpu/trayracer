@@ -16,10 +16,10 @@
 
 int main(int argc, char* argv[])
 { 
-    unsigned w = 1000;
-    unsigned h = 1000;
-    int rpp = 2;
-    int ball = 100;
+    unsigned w = 500;
+    unsigned h = 500;
+    int rpp = 1;
+    int ball = 32;
     int mb = 5;
     for (int i = 0; i < argc; i++) {
         if (strcmp(argv[i], "-w") == 0) {
@@ -165,13 +165,13 @@ int main(int argc, char* argv[])
 
     std::vector<std::thread> Threads;
     /// SET UP BVH
-	auto start = std::chrono::high_resolution_clock::now();
+	//auto start = std::chrono::high_resolution_clock::now();
     BoundingBox Box;
     rt.SetUpNode(Box, Spheres);
-	auto end = std::chrono::high_resolution_clock::now();
-	std::chrono::duration<float> frameDuration = end - start;
-	double DoubleFrameDuration = frameDuration.count();
-    std::cout << "Time to create BVH: " << DoubleFrameDuration << std::endl;
+	//auto end = std::chrono::high_resolution_clock::now();
+	//std::chrono::duration<float> frameDuration = end - start;
+	//double DoubleFrameDuration = frameDuration.count();
+    //std::cout << "Time to create BVH: " << DoubleFrameDuration << std::endl;
 
 
     /// RENDERING LOOP
@@ -226,7 +226,7 @@ int main(int argc, char* argv[])
 		std::cout << "Sphere Amount: " << SphereAmount << std::endl;
         std::cout << "Duration: " << frameDuration.count() << " sec" << std::endl;
         std::cout << "Total Number of Rays: " << RayNum << std::endl;
-        std::cout << "Total Rays: " << (RayNum / 1'000'000)/DoubleFrameDuration << "MRays/s" << std::endl;
+        std::cout << "Total Rays: " << (RayNum / 1'000'000)/DoubleFrameDuration << " MRays/s" << std::endl;
 		std::cout << "------------------------------" << std::endl;
 
         frameIndex++;
