@@ -17,9 +17,9 @@
 int main(int argc, char* argv[])
 { 
     unsigned w = 1000;
-    unsigned h = 1000;
-    int rpp = 2;
-    int ball = 32;
+    unsigned h = 500;
+    int rpp = 5;
+    int ball = 64;
     int mb = 5;
     for (int i = 0; i < argc; i++) {
         if (strcmp(argv[i], "-w") == 0) {
@@ -225,16 +225,15 @@ int main(int argc, char* argv[])
         std::chrono::duration<float> frameDuration = end - start;
         double DoubleFrameDuration = frameDuration.count();
         // Printing Info
-		//std::cout << "------------------------------" << std::endl;
-		//std::cout << "Width: " << width << std::endl;
-		//std::cout << "Height: " << height << std::endl;
-		//std::cout << "Ray Per Pixel: " << RaysPerPixel << std::endl;
-		//std::cout << "Sphere Amount: " << SphereAmount << std::endl;
-  //      std::cout << "Duration: " << frameDuration.count() << " sec" << std::endl;
-        std::cout << ": " << frameDuration.count() << " sec" << std::endl;
-  //      std::cout << "Total Number of Rays: " << RayNum << std::endl;
-  //      std::cout << "Total Rays: " << (RayNum / 1'000'000)/DoubleFrameDuration << " MRays/s" << std::endl;
-		//std::cout << "------------------------------" << std::endl;
+		std::cout << "------------------------------" << std::endl;
+		std::cout << "Width: " << width << std::endl;
+		std::cout << "Height: " << height << std::endl;
+		std::cout << "Ray Per Pixel: " << RaysPerPixel << std::endl;
+		std::cout << "Sphere Amount: " << SphereAmount << std::endl;
+        std::cout << "Duration: " << frameDuration.count() << " sec" << std::endl;
+        std::cout << "Total Number of Rays: " << RayNum << std::endl;
+        std::cout << "Total Rays: " << (RayNum / 1'000'000)/DoubleFrameDuration << " MRays/s" << std::endl;
+		std::cout << "------------------------------" << std::endl;
 
         frameIndex++;
 

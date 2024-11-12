@@ -15,9 +15,13 @@ Raytracer::Raytracer(unsigned w, unsigned h, std::vector<Color>& frameBuffer, un
     bounces(bounces),
     width(w),
     height(h)
-{}
+{
+    Pool.SpawnThread();
+}
 
-Raytracer::~Raytracer() {}
+Raytracer::~Raytracer() {
+    Pool.Stop();
+}
 //------------------------------------------------------------------------------
 /**
 */
@@ -25,49 +29,6 @@ Raytracer::~Raytracer() {}
 
 void Raytracer::SetUpNode(BoundingBox Box, std::vector<Sphere> Spheres) {
     MainNode = new Node(Box, Spheres);
-}
-
-void ThreadSpawner(Raytracer rt) {
-	size_t MaxPixel = rt.width * rt.height;
-		int Cores = std::thread::hardware_concurrency();
-		if (Cores > 6)
-			Cores = 6;
-		std::atomic<size_t> PixelCounter(0);
-		std::vector<std::thread> Threads;
-
-		static int leet = 1337;
-		std::mt19937 generator(leet++);
-		std::uniform_real_distribution<float> dis(0.0f, 1.0f);
-		unsigned int RayNum = 0;
-
-		// Spawn  threads
-		for (int i = 0; i < Cores; i++) {
-			Threads.emplace_back([&]() {
-			//Pool.QueueJob([&]() {
-				while (true) {
-					//static int leet = 1337;
-					//std::mt19937 generator(leet++);
-					//std::uniform_real_distribution<float> dis(0.0f, 1.0f);
-					size_t index = PixelCounter.fetch_add(1);
-
-					// Base Case
-					if (index >= MaxPixel)
-						break;
-
-					auto [x, y] = rt.indexToXY(index);
-					float u = ((float(x) + dis(generator)) * (1.0f / rt.width)) * 2.0f - 1.0f;
-					float v = ((float(y) + dis(generator)) * (1.0f / rt.height)) * 2.0f - 1.0f;
-					Color color;
-
-					for (int z = 0; z < rt.rpp; z++) {
-						color += rt.GetColor(u, v, x, y);
-						RayNum++;
-					}
-
-					rt.AssignColor(color, x, y);
-				}
-			});
-
 }
 
 unsigned int 
@@ -78,22 +39,16 @@ Raytracer::AssignJob()
     int Cores = std::thread::hardware_concurrency();
     if (Cores > 6)
 		Cores = 6;
-    std::atomic<size_t> PixelCounter(0);
+    MaxPixel = this->height * this->width;
+    PixelCounter = 0;
 	std::vector<std::thread> Threads;
-
-    static int leet = 1337;
-    std::mt19937 generator(leet++);
-    std::uniform_real_distribution<float> dis(0.0f, 1.0f);
-    unsigned int RayNum = 0;
 
     // Spawn  threads
     for (int i = 0; i < Cores; i++) {
         Threads.emplace_back([&]() {
-		//Pool.QueueJob([&]() {
+		//Pool.QueueJob([&]() { 
+
             while (true) {
-				//static int leet = 1337;
-				//std::mt19937 generator(leet++);
-				//std::uniform_real_distribution<float> dis(0.0f, 1.0f);
                 size_t index = PixelCounter.fetch_add(1);
 
                 // Base Case
@@ -101,8 +56,9 @@ Raytracer::AssignJob()
                     break;
 
                 auto [x, y] = indexToXY(index);
-				float u = ((float(x) + dis(generator)) * (1.0f / width)) * 2.0f - 1.0f;
-				float v = ((float(y) + dis(generator)) * (1.0f / height)) * 2.0f - 1.0f;
+				float u = ((float(x) + RandomFloat()) * (1.0f / width)) * 2.0f - 1.0f;
+				float v = ((float(y) + RandomFloat()) * (1.0f / height)) * 2.0f - 1.0f;
+                
                 Color color;
 
                 for (int z = 0; z < rpp; z++) {
@@ -115,9 +71,9 @@ Raytracer::AssignJob()
 		});
     }
 
-    /*while (Pool.Busy())
-    {
-    }*/
+    //while (Pool.Busy())
+    //{
+    //}
 
     for (auto& thread : Threads) {
         thread.join();

@@ -19,6 +19,11 @@ public:
     ~Raytracer();
 
     Node *MainNode;
+    ThreadPool Pool;
+    std::atomic<int> PixelCounter;
+    int MaxPixel;
+    int RayNum;
+    void TestJob();
 
     unsigned AssignJob();
 
