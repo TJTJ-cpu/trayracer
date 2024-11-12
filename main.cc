@@ -16,9 +16,9 @@
 
 int main(int argc, char* argv[])
 { 
-    unsigned w = 500;
-    unsigned h = 500;
-    int rpp = 1;
+    unsigned w = 1000;
+    unsigned h = 1000;
+    int rpp = 2;
     int ball = 32;
     int mb = 5;
     for (int i = 0; i < argc; i++) {
@@ -172,12 +172,18 @@ int main(int argc, char* argv[])
 	//std::chrono::duration<float> frameDuration = end - start;
 	//double DoubleFrameDuration = frameDuration.count();
     //std::cout << "Time to create BVH: " << DoubleFrameDuration << std::endl;
+    //rt.MainNode->LevelOrderTraversal();
 
 
+	//std::cout << "------------------------------" << std::endl;
+	//std::cout << "Width: " << width << std::endl;
+	//std::cout << "Height: " << height << std::endl;
+	//std::cout << "Ray Per Pixel: " << RaysPerPixel << std::endl;
+	//std::cout << "Sphere Amount: " << SphereAmount << std::endl;
     /// RENDERING LOOP
     //while (wnd.IsOpen() && !exit)
 	//auto start2 = std::chrono::high_resolution_clock::now();
-    //for (int i = 0; i < 10; i ++)
+    //for (int i = 1; i < 25; i ++)
     {
         resetFramebuffer = false;
         moveDir = {0,0,0};
@@ -219,15 +225,16 @@ int main(int argc, char* argv[])
         std::chrono::duration<float> frameDuration = end - start;
         double DoubleFrameDuration = frameDuration.count();
         // Printing Info
-		std::cout << "------------------------------" << std::endl;
-		std::cout << "Width: " << width << std::endl;
-		std::cout << "Height: " << height << std::endl;
-		std::cout << "Ray Per Pixel: " << RaysPerPixel << std::endl;
-		std::cout << "Sphere Amount: " << SphereAmount << std::endl;
-        std::cout << "Duration: " << frameDuration.count() << " sec" << std::endl;
-        std::cout << "Total Number of Rays: " << RayNum << std::endl;
-        std::cout << "Total Rays: " << (RayNum / 1'000'000)/DoubleFrameDuration << " MRays/s" << std::endl;
-		std::cout << "------------------------------" << std::endl;
+		//std::cout << "------------------------------" << std::endl;
+		//std::cout << "Width: " << width << std::endl;
+		//std::cout << "Height: " << height << std::endl;
+		//std::cout << "Ray Per Pixel: " << RaysPerPixel << std::endl;
+		//std::cout << "Sphere Amount: " << SphereAmount << std::endl;
+  //      std::cout << "Duration: " << frameDuration.count() << " sec" << std::endl;
+        std::cout << ": " << frameDuration.count() << " sec" << std::endl;
+  //      std::cout << "Total Number of Rays: " << RayNum << std::endl;
+  //      std::cout << "Total Rays: " << (RayNum / 1'000'000)/DoubleFrameDuration << " MRays/s" << std::endl;
+		//std::cout << "------------------------------" << std::endl;
 
         frameIndex++;
 

@@ -27,14 +27,57 @@ void Raytracer::SetUpNode(BoundingBox Box, std::vector<Sphere> Spheres) {
     MainNode = new Node(Box, Spheres);
 }
 
+void ThreadSpawner(Raytracer rt) {
+	size_t MaxPixel = rt.width * rt.height;
+		int Cores = std::thread::hardware_concurrency();
+		if (Cores > 6)
+			Cores = 6;
+		std::atomic<size_t> PixelCounter(0);
+		std::vector<std::thread> Threads;
+
+		static int leet = 1337;
+		std::mt19937 generator(leet++);
+		std::uniform_real_distribution<float> dis(0.0f, 1.0f);
+		unsigned int RayNum = 0;
+
+		// Spawn  threads
+		for (int i = 0; i < Cores; i++) {
+			Threads.emplace_back([&]() {
+			//Pool.QueueJob([&]() {
+				while (true) {
+					//static int leet = 1337;
+					//std::mt19937 generator(leet++);
+					//std::uniform_real_distribution<float> dis(0.0f, 1.0f);
+					size_t index = PixelCounter.fetch_add(1);
+
+					// Base Case
+					if (index >= MaxPixel)
+						break;
+
+					auto [x, y] = rt.indexToXY(index);
+					float u = ((float(x) + dis(generator)) * (1.0f / rt.width)) * 2.0f - 1.0f;
+					float v = ((float(y) + dis(generator)) * (1.0f / rt.height)) * 2.0f - 1.0f;
+					Color color;
+
+					for (int z = 0; z < rt.rpp; z++) {
+						color += rt.GetColor(u, v, x, y);
+						RayNum++;
+					}
+
+					rt.AssignColor(color, x, y);
+				}
+			});
+
+}
+
 unsigned int 
 Raytracer::AssignJob()
 {
     // Max Pixels
     size_t MaxPixel = width * height;
     int Cores = std::thread::hardware_concurrency();
-    if (Cores > 7)
-		Cores = 7;
+    if (Cores > 6)
+		Cores = 6;
     std::atomic<size_t> PixelCounter(0);
 	std::vector<std::thread> Threads;
 
@@ -164,7 +207,7 @@ Raytracer::TracePath(Ray ray, unsigned n)
     Object* hitObject = nullptr;
     float distance = FLT_MAX;
 
-    if (BVHRaycast(ray, hitPoint, hitNormal, hitObject, distance, this->objects))
+    if (Raycast(ray, hitPoint, hitNormal, hitObject, distance, this->objects))
     {
         Ray scatteredRay =  Ray(hitObject->ScatterRay(ray, hitPoint, hitNormal));
         if (n < this->bounces)

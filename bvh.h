@@ -130,13 +130,13 @@ public:
 		vec3 size = parent->bounds.Size();
 		int SpiltAxis = size.x > max(size.y, size.z) ? 0 : size.y > size.z ? 1 : 2;
 		float SplitPos = parent->bounds.Center[SpiltAxis];
-		std::cout << std::endl;
-		std::cout << "Depth-> " << depth << std::endl;
-		std::cout << "Object Count: " << parent->spheres.size() << std::endl;
-		std::cout << "SIZE-> x: " << size.x << ", y: " << size.y << ", z: " << size.z << std::endl;
-		std::cout << "SpiltAxis: " << SpiltAxis << std::endl;
-		std::cout << "SplitPos: " << SplitPos << std::endl;
-		std::cout << std::endl;
+		//std::cout << std::endl;
+		//std::cout << "Depth-> " << depth << std::endl;
+		//std::cout << "Object Count: " << parent->spheres.size() << std::endl;
+		//std::cout << "SIZE-> x: " << size.x << ", y: " << size.y << ", z: " << size.z << std::endl;
+		//std::cout << "SpiltAxis: " << SpiltAxis << std::endl;
+		//std::cout << "SplitPos: " << SplitPos << std::endl;
+		//std::cout << std::endl;
 
 		parent->ChildA = new Node();
 		parent->ChildB = new Node();
@@ -146,8 +146,8 @@ public:
 			Node *Child = bInA ? parent->ChildA : parent->ChildB;
 			Child->AddSphere(sphere);
 			Child->bounds.GrowToInclude(sphere);
-			size = Child->bounds.Size();
-			std::cout << "x: " << size.x << ", y: " << size.y << ", z: " << size.z << std::endl;
+			//size = Child->bounds.Size();
+			//std::cout << "x: " << size.x << ", y: " << size.y << ", z: " << size.z << std::endl;
 		}
 		SplitNode(parent->ChildA, depth + 1);
 		SplitNode(parent->ChildB, depth + 1);
@@ -185,6 +185,25 @@ public:
 			hit = hitB;
 
 		return hit;
+	}
+
+	void LevelOrderTraversal() {
+		if (!this)
+			return;
+		std::queue<Node*> Queue;
+		Queue.push(this);
+		while (!Queue.empty()) {
+			Node* CurrNode = Queue.front();
+			vec3 size = CurrNode->bounds.Size();
+			std::cout << std::endl;
+			std::cout << "Spheres count: " << CurrNode->spheres.size() << std::endl;
+			std::cout << "Size->  x: " << size.x << ", y: " << size.y << ", z: " << size.z << std::endl;
+			if (CurrNode->ChildA)
+				Queue.push(CurrNode->ChildA);
+			if (CurrNode->ChildB)
+				Queue.push(CurrNode->ChildB);
+			Queue.pop();
+		}
 	}
 };
 
