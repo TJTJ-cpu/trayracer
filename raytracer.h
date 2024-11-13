@@ -26,7 +26,7 @@ public:
 
     unsigned AssignJob();
 
-    void SetUpNode(BoundingBox Box, std::vector<Sphere> Spheres);
+    void SetUpNode(BoundingBox Box, std::vector<Sphere*> Spheres);
 
     Color GetColor(float u, float v, int x, int y);
 

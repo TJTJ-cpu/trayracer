@@ -26,7 +26,7 @@ Raytracer::~Raytracer() {
 /**
 */
 
-void Raytracer::SetUpNode(BoundingBox Box, std::vector<Sphere> Spheres) {
+void Raytracer::SetUpNode(BoundingBox Box, std::vector<Sphere*> Spheres) {
     MainNode = new Node(Box, Spheres);
 }
 
@@ -36,8 +36,7 @@ Raytracer::AssignJob()
     // Max Pixels
     size_t MaxPixel = width * height;
     int Cores = std::thread::hardware_concurrency();
-  //  if (Cores > 6)
-		//Cores = 1;
+	//Cores = 1;
     MaxPixel = this->height * this->width;
     PixelCounter = 0;
 	std::vector<std::thread> Threads;
@@ -45,7 +44,6 @@ Raytracer::AssignJob()
     // Spawn  threads
     for (int i = 0; i < Cores; i++) {
         Threads.emplace_back([&]() {
-		//Pool.QueueJob([&]() { 
             while (true) {
                 size_t index = PixelCounter.fetch_add(1);
 
@@ -68,10 +66,6 @@ Raytracer::AssignJob()
             }
 		});
     }
-
-    //while (Pool.Busy())
-    //{
-    //}
 
     for (auto& thread : Threads) {
         thread.join();
@@ -161,7 +155,7 @@ Raytracer::TracePath(Ray ray, unsigned n)
     Object* hitObject = nullptr;
     float distance = FLT_MAX;
 
-    if (BVHRaycast(ray, hitPoint, hitNormal, hitObject, distance, this->objects))
+    if (Raycast(ray, hitPoint, hitNormal, hitObject, distance, this->objects))
     {
         Ray scatteredRay =  Ray(hitObject->ScatterRay(ray, hitPoint, hitNormal));
         if (n < this->bounces)
@@ -196,7 +190,7 @@ Raytracer::BVHRaycast(Ray ray, vec3& hitPoint, vec3& hitNormal, Object*& hitObje
     HitResult hit;
     std::vector<HitResult> HitVec;
     std::vector<Sphere*> Spheres;
-    MainNode->BVHIntersect(this->MainNode, ray, Spheres);
+    Spheres = MainNode->BVHIntersect(this->MainNode, ray);
 
     for (Sphere* object : Spheres){
         hit = object->Intersect(ray);
@@ -237,6 +231,7 @@ Raytracer::Raycast(Ray ray, vec3& hitPoint, vec3& hitNormal, Object*& hitObject,
             numHits++;
         }
     }
+    if (closestHit.object == nullptr)
 
     hitPoint = closestHit.p;
     hitNormal = closestHit.normal;

@@ -22,14 +22,14 @@ public:
 	bool bHasObject = false;
 
 	// Make the bouding box include the sphere that we pass in
-	void GrowToInclude(const Sphere& sphere) {
-		Min.x = std::min(Min.x, sphere.center.x - sphere.radius);
-		Min.y = std::min(Min.y, sphere.center.y - sphere.radius);
-		Min.z = std::min(Min.z, sphere.center.z - sphere.radius);
+	void GrowToInclude(Sphere* sphere) {
+		Min.x = std::min(Min.x, sphere->center.x - sphere->radius);
+		Min.y = std::min(Min.y, sphere->center.y - sphere->radius);
+		Min.z = std::min(Min.z, sphere->center.z - sphere->radius);
 
-		Max.x = std::max(Max.x, sphere.center.x + sphere.radius);
-		Max.y = std::max(Max.y, sphere.center.y + sphere.radius);
-		Max.z = std::max(Max.z, sphere.center.z + sphere.radius);
+		Max.x = std::max(Max.x, sphere->center.x + sphere->radius);
+		Max.y = std::max(Max.y, sphere->center.y + sphere->radius);
+		Max.z = std::max(Max.z, sphere->center.z + sphere->radius);
 		Center = (Min + Max) / 2;
 		this->bHasObject = true;
 	}
@@ -39,30 +39,48 @@ public:
 	}
 
 	bool BoxIntersection(Ray ray) {
-		float tMin, tMax, tyMin, tyMax, tzMin, tzMax;
+        float txMin = (this->Min.x - ray.Origin.x) * ray.InvRayDir.x;
+        float txMax = (this->Max.x - ray.Origin.x) * ray.InvRayDir.x;
+        float tyMin = (this->Min.y - ray.Origin.y) * ray.InvRayDir.y;
+        float tyMax = (this->Max.y - ray.Origin.y) * ray.InvRayDir.y;
+        float tzMin = (this->Min.z - ray.Origin.z) * ray.InvRayDir.z;
+        float tzMax = (this->Max.z - ray.Origin.z) * ray.InvRayDir.z;
 
-		tMin = (this->Min.x - ray.Origin.x) * ray.InvRayDir.x;
-		tMax = (this->Max.x - ray.Origin.x) * ray.InvRayDir.x;
+        float tMin = std::max(std::max(std::min(txMin, txMax), std::min(tyMin, tyMax)), std::min(tzMin, tzMax));
+        float tMax = std::min(std::min(std::max(txMin, txMax), std::max(tyMin, tyMax)), std::max(tzMin, tzMax));
 
-		tyMin = (this->Min.y - ray.Origin.y) * ray.InvRayDir.y;
-		tyMax = (this->Max.y - ray.Origin.y) * ray.InvRayDir.y;
+        if (tMax < 0)
+            return false;
 
-		// CHECK POINT ALONG Y-AXIS
-		if ((tMin > tyMax) || (tyMin > tMax))
-			return false;
-		// GET THE EARLIEST POINT THAT THE RAY ENTER THE BOX
-		if (tyMin > tMin)
-			tMin = tyMin;
-		// GET THE LATEST POINT THAT THE RAY EXIT THE BOX
-		if (tyMax < tMax)
-			tMax = tyMax;
+        if (tMin > tMax)
+            return false;
 
-		tzMin = (this->Min.z - ray.Origin.z) * ray.InvRayDir.z;
-		tzMax = (this->Max.z - ray.Origin.z) * ray.InvRayDir.z;
-		if ((tMin > tzMax) || (tzMin > tMax))
-			return false;
+        return true;
 
-		return true;
+		// float tMin, tMax, tyMin, tyMax, tzMin, tzMax;
+		//
+		// tMin = (this->Min.x - ray.Origin.x) * ray.InvRayDir.x;
+		// tMax = (this->Max.x - ray.Origin.x) * ray.InvRayDir.x;
+		//
+		// tyMin = (this->Min.y - ray.Origin.y) * ray.InvRayDir.y;
+		// tyMax = (this->Max.y - ray.Origin.y) * ray.InvRayDir.y;
+		//
+		// // CHECK POINT ALONG Y-AXIS
+		// if ((tMin > tyMax) || (tyMin > tMax))
+		// 	return false;
+		// // GET THE EARLIEST POINT THAT THE RAY ENTER THE BOX
+		// if (tyMin > tMin)
+		// 	tMin = tyMin;
+		// // GET THE LATEST POINT THAT THE RAY EXIT THE BOX
+		// if (tyMax < tMax)
+		// 	tMax = tyMax;
+		//
+		// tzMin = (this->Min.z - ray.Origin.z) * ray.InvRayDir.z;
+		// tzMax = (this->Max.z - ray.Origin.z) * ray.InvRayDir.z;
+		// if ((tMin > tzMax) || (tzMin > tMax))
+		// 	return false;
+		//
+		// return true;
 	}
 
 	vec3 Size() {
@@ -76,15 +94,15 @@ class Node
 {
 public:
 	BoundingBox bounds;
-	std::vector<Sphere> spheres;
+	std::vector<Sphere*> spheres;
 	Node* ChildA = nullptr;
 	Node* ChildB = nullptr;
 
 	Node() {};
 
-	Node(BoundingBox box, const std::vector<Sphere> spheres)
-	: bounds(box), spheres(spheres) {
-		Build(spheres);
+	Node(BoundingBox box, const std::vector<Sphere*> sp)
+	: bounds(box), spheres(sp) {
+		Build(sp);
 		//SplitNode(this, 0);
 	}
 
@@ -93,36 +111,16 @@ public:
 		delete ChildB;
 	}
 
-	void AddSphere(Sphere sphere) {
+	void AddSphere(Sphere* sphere) {
 		spheres.push_back(sphere);
+        this->bounds.GrowToInclude(sphere);
 	}
 
 	// Build BVH
-	void Build(const std::vector<Sphere>& spheres) {
-		for (const auto& sphere : spheres) 
+	void Build(const std::vector<Sphere*> spheres) {
+		for (auto sphere : spheres) 
 			bounds.GrowToInclude(sphere);
 		return;
-	}
-
-	void Spilt(Node* node, int depth) {
-		// std::cout << "SplitNode" << std::endl;
-		const int MaxDepth = 32;
-		const int MinSpherePerLeaf = 2;
-
-		if (depth == MaxDepth) {
-			// std::cout << "MaxDepth Reached" << std::endl;
-			return;
-		}
-
-		vec3 BoxSize = node->bounds.Size();
-		int SplitAxis = 0;
-		if (BoxSize.x > BoxSize.y && BoxSize.x > BoxSize.z)
-			SplitAxis = 0;
-		else if (BoxSize.y > BoxSize.z)
-			SplitAxis = 1;
-		else 
-			SplitAxis = 2;
-		
 	}
 
 	void SplitNode(Node* parent, int depth) {
@@ -146,58 +144,90 @@ public:
 		parent->ChildA = new Node();
 		parent->ChildB = new Node();
 
-		for (Sphere sphere : parent->spheres) {
-			bool bInA = sphere.center[SpiltAxis] < SplitPos;
-			Node *Child = bInA ? parent->ChildA : parent->ChildB;
-			Child->AddSphere(sphere);
-			Child->bounds.GrowToInclude(sphere);
+		for (auto sphere : parent->spheres) {
+			// bool bInA = sphere->center[SpiltAxis] < SplitPos;
+			// Node *Child = bInA ? parent->ChildA : parent->ChildB;
+			// Child->AddSphere(sphere);
+			// Child->bounds.GrowToInclude(sphere);
+
+            if (bInB(sphere, SpiltAxis, SplitPos)){
+                parent->ChildB->AddSphere(sphere);
+            } else if (bInA(sphere, SpiltAxis, SplitPos)){
+                parent->ChildA->AddSphere(sphere);
+            } else {
+                parent->ChildA->AddSphere(sphere);
+                parent->ChildB->AddSphere(sphere);
+            }
+
 			//size = Child->bounds.Size();
 			//std::cout << "x: " << size.x << ", y: " << size.y << ", z: " << size.z << std::endl;
 		}
 		SplitNode(parent->ChildA, depth + 1);
 		SplitNode(parent->ChildB, depth + 1);
 	}
-	//
-	// HitResult BVHIntersect(Node *parent, const Ray& ray) const {
-    void BVHIntersect(Node *parent, const Ray& ray, std::vector<Sphere*> &Sph)  {
-		HitResult hit;
 
-		if (parent->ChildA == nullptr && parent->ChildB == nullptr) 
-		{
-			/// TO DO 
-			// std::cout << "SphereCount: " << parent->spheres.size() << std::endl;
-			// LOOP THROUGH IT AND THEN GET THE CLOSEST SPHERE
-			for (Sphere sphere : parent->spheres) {
-                Sph.push_back(&sphere);
-				//HitResult SphereHit = sphere.Intersect(ray);
-				//if (SphereHit.HasValue() && SphereHit.t < hit.t)
-    //                HitVec.push_back(SphereHit);
-			}
-			return;
-			//if (HitVec.size() > 0)
-			//	return;
-			//else 
-			//	return;
+    bool bInB(Sphere* sp, int axis, float Spos){
+        if (sp->center[axis] - sp->radius > Spos && sp->center[axis] + sp->radius > Spos)
+            return true;
+        return false;
+        
+    }
+
+    bool bInA(Sphere* sp, int axis, float Spos){
+        if (sp->center[axis] - sp->radius < Spos && sp->center[axis] + sp->radius < Spos)
+            return true;
+        return false;
+        
+    }
+
+	std::vector<Sphere*>& BVHIntersect(Node* parent, const Ray& ray) {
+		if (parent->ChildA == nullptr && parent->ChildB == nullptr) {
+			return parent->spheres;
 		}
-        std::vector<Sphere*> hitA, hitB;
 
+		std::vector<Sphere*> hitA, hitB, nullSph;
 
-		if (parent->ChildA)
-			if (parent->ChildA->bounds.BoxIntersection(ray))
-				BVHIntersect(parent->ChildA, ray, hitA);
-			else
-				return;
+		// Check intersection with ChildA's bounding box and recurse if hit
+		if (parent->ChildA && parent->ChildA->bounds.BoxIntersection(ray)) {
+			hitA = BVHIntersect(parent->ChildA, ray);
+		}
 
+		// Check intersection with ChildB's bounding box and recurse if hit
+		if (parent->ChildB && parent->ChildB->bounds.BoxIntersection(ray)) {
+			hitB = BVHIntersect(parent->ChildB, ray);
+		}
 
-		if (parent->ChildB)
-			if (parent->ChildB->bounds.BoxIntersection(ray))
-				BVHIntersect(parent->ChildB, ray, hitB);
-			else
-				return;
-
-
-		return;
+		return nullSph;
 	}
+
+ //   std::vector<Sphere*>& BVHIntersect(Node *parent, const Ray& ray) {
+	//	HitResult hit;
+
+	//	if (parent->ChildA == nullptr && parent->ChildB == nullptr) 
+	//	{
+	//		return parent->spheres;
+	//	}
+	//	else 
+	//		recursice
+ //       std::vector<Sphere*> hitA, hitB;
+
+
+	//	if (parent->ChildA)
+	//		if (parent->ChildA->bounds.BoxIntersection(ray))
+	//			BVHIntersect(parent->ChildA, ray, hitA);
+	//		else
+	//			return;
+
+
+	//	if (parent->ChildB)
+	//		if (parent->ChildB->bounds.BoxIntersection(ray))
+	//			BVHIntersect(parent->ChildB, ray, hitB);
+	//		else
+	//			return;
+
+
+	//	return;
+	//}
 
 	void LevelOrderTraversal() {
 		if (!this)

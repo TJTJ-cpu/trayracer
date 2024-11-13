@@ -67,9 +67,9 @@ int main(int argc, char* argv[])
     mat->color = { 0.5,0.5,0.5 };
     mat->roughness = 0.3;
     Sphere* ground = new Sphere(1000, { 0,-1000, -1 }, mat);
-    std::vector<Sphere> Spheres;
+    std::vector<Sphere*> Spheres;
     rt.AddObject(ground);
-	Spheres.push_back(*ground);
+	Spheres.push_back(ground);
     
     std::vector<std::string>MaterialType;
     std::vector<float> SpanVec;
@@ -93,7 +93,7 @@ int main(int argc, char* argv[])
 		},
 		mat);
 		rt.AddObject(ground);
-        Spheres.push_back(*ground);
+        Spheres.push_back(ground);
     }
     
     bool exit = false;
