@@ -36,7 +36,7 @@ Raytracer::AssignJob()
     // Max Pixels
     size_t MaxPixel = width * height;
     int Cores = std::thread::hardware_concurrency();
-	//Cores = 1;
+	Cores = 1;
     MaxPixel = this->height * this->width;
     PixelCounter = 0;
 	std::vector<std::thread> Threads;
@@ -155,7 +155,7 @@ Raytracer::TracePath(Ray ray, unsigned n)
     Object* hitObject = nullptr;
     float distance = FLT_MAX;
 
-    if (Raycast(ray, hitPoint, hitNormal, hitObject, distance, this->objects))
+    if (BVHRaycast(ray, hitPoint, hitNormal, hitObject, distance, this->objects))
     {
         Ray scatteredRay =  Ray(hitObject->ScatterRay(ray, hitPoint, hitNormal));
         if (n < this->bounces)
@@ -190,8 +190,9 @@ Raytracer::BVHRaycast(Ray ray, vec3& hitPoint, vec3& hitNormal, Object*& hitObje
     HitResult hit;
     std::vector<HitResult> HitVec;
     std::vector<Sphere*> Spheres;
-    Spheres = MainNode->BVHIntersect(this->MainNode, ray);
-
+    Node* CurrNode = new Node();
+    CurrNode = MainNode->BVHIntersect(this->MainNode, ray);
+    Spheres = CurrNode->spheres;
     for (Sphere* object : Spheres){
         hit = object->Intersect(ray);
         if (hit.HasValue())

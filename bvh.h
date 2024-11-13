@@ -103,7 +103,7 @@ public:
 	Node(BoundingBox box, const std::vector<Sphere*> sp)
 	: bounds(box), spheres(sp) {
 		Build(sp);
-		//SplitNode(this, 0);
+		SplitNode(this, 0);
 	}
 
 	~Node() {
@@ -124,7 +124,7 @@ public:
 	}
 
 	void SplitNode(Node* parent, int depth) {
-		const int MaxDepth = 32;
+		const int MaxDepth = 3;
 
 		if (depth == MaxDepth || !parent->bounds.bHasObject || parent->spheres.size() <= 3) {
 			return;
@@ -150,14 +150,18 @@ public:
 			// Child->AddSphere(sphere);
 			// Child->bounds.GrowToInclude(sphere);
 
-            if (bInB(sphere, SpiltAxis, SplitPos)){
+            if (bInA(sphere, SpiltAxis, SplitPos)){
                 parent->ChildB->AddSphere(sphere);
-            } else if (bInA(sphere, SpiltAxis, SplitPos)){
+            } else if (bInB(sphere, SpiltAxis, SplitPos)){
                 parent->ChildA->AddSphere(sphere);
+            } else if (bInAB(sphere, SpiltAxis, SplitPos)){
+                parent->ChildA->AddSphere(sphere);
+                parent->ChildB->AddSphere(sphere);
             } else {
-                parent->ChildA->AddSphere(sphere);
-                parent->ChildB->AddSphere(sphere);
+                std::cout << "You're fucked up" << std::endl;
             }
+			std::cout << std::endl;
+			std::cout << std::endl;
 
 			//size = Child->bounds.Size();
 			//std::cout << "x: " << size.x << ", y: " << size.y << ", z: " << size.z << std::endl;
@@ -166,7 +170,15 @@ public:
 		SplitNode(parent->ChildB, depth + 1);
 	}
 
+    bool bInAB(Sphere* sp, int axis, float Spos){
+		printBoundsCheck(sp, axis, Spos);
+        if (sp->center[axis] - sp->radius < Spos && sp->center[axis] + sp->radius > Spos)
+            return true;
+        return false;
+    }
+
     bool bInB(Sphere* sp, int axis, float Spos){
+		printBoundsCheck(sp, axis, Spos);
         if (sp->center[axis] - sp->radius > Spos && sp->center[axis] + sp->radius > Spos)
             return true;
         return false;
@@ -174,30 +186,45 @@ public:
     }
 
     bool bInA(Sphere* sp, int axis, float Spos){
+		printBoundsCheck(sp, axis, Spos);
         if (sp->center[axis] - sp->radius < Spos && sp->center[axis] + sp->radius < Spos)
             return true;
         return false;
         
     }
 
-	std::vector<Sphere*>& BVHIntersect(Node* parent, const Ray& ray) {
+	void printBoundsCheck(Sphere* sp, int axis, float Spos) {
+		float lower_bound = sp->center[axis] - sp->radius;
+		float upper_bound = sp->center[axis] + sp->radius;
+
+		std::cout << "Debugging Bounds Check:" << std::endl;
+		std::cout << "  Lower Bound (sp->center[axis] - sp->radius): " << lower_bound << std::endl;
+		std::cout << "  Upper Bound (sp->center[axis] + sp->radius): " << upper_bound << std::endl;
+		std::cout << "  Spos: " << Spos << std::endl;
+	}
+
+	//std::vector<Sphere*>& BVHIntersect(Node* parent, const Ray& ray) {
+	Node* BVHIntersect(Node* parent, const Ray& ray) {
 		if (parent->ChildA == nullptr && parent->ChildB == nullptr) {
-			return parent->spheres;
+			return parent;
 		}
 
 		std::vector<Sphere*> hitA, hitB, nullSph;
+		Node* ParA = new Node();
+		Node* ParB = new Node();
+		Node* ParT = new Node();
 
 		// Check intersection with ChildA's bounding box and recurse if hit
 		if (parent->ChildA && parent->ChildA->bounds.BoxIntersection(ray)) {
-			hitA = BVHIntersect(parent->ChildA, ray);
+			ParA = BVHIntersect(parent->ChildA, ray);
 		}
 
 		// Check intersection with ChildB's bounding box and recurse if hit
 		if (parent->ChildB && parent->ChildB->bounds.BoxIntersection(ray)) {
-			hitB = BVHIntersect(parent->ChildB, ray);
+			ParB = BVHIntersect(parent->ChildB, ray);
 		}
 
-		return nullSph;
+		return ParT;
 	}
 
  //   std::vector<Sphere*>& BVHIntersect(Node *parent, const Ray& ray) {
@@ -237,9 +264,9 @@ public:
 		while (!Queue.empty()) {
 			Node* CurrNode = Queue.front();
 			vec3 size = CurrNode->bounds.Size();
-			//std::cout << std::endl;
-			//std::cout << "Spheres count: " << CurrNode->spheres.size() << std::endl;
-			//std::cout << "Size->  x: " << size.x << ", y: " << size.y << ", z: " << size.z << std::endl;
+			std::cout << std::endl;
+			std::cout << "Spheres count: " << CurrNode->spheres.size() << std::endl;
+			std::cout << "Size->  x: " << size.x << ", y: " << size.y << ", z: " << size.z << std::endl;
 			if (CurrNode->ChildA)
 				Queue.push(CurrNode->ChildA);
 			if (CurrNode->ChildB)
