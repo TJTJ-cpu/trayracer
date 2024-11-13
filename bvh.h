@@ -81,10 +81,6 @@ public:
 
 	Node() {};
 
-	Node(BoundingBox box)
-	: bounds(box){
-	}
-
 	Node(BoundingBox box, const std::vector<Sphere> spheres)
 	: bounds(box), spheres(spheres) {
 		Build(spheres);

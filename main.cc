@@ -167,7 +167,7 @@ int main(int argc, char* argv[])
     /// SET UP BVH
 	//auto start = std::chrono::high_resolution_clock::now();
     BoundingBox Box;
-    rt.SetUpNode(Box);
+    rt.SetUpNode(Box, Spheres);
 	//auto end = std::chrono::high_resolution_clock::now();
 	//std::chrono::duration<float> frameDuration = end - start;
 	//double DoubleFrameDuration = frameDuration.count();

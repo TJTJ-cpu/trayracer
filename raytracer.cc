@@ -26,10 +26,8 @@ Raytracer::~Raytracer() {
 /**
 */
 
-
-void Raytracer::SetUpNode(BoundingBox Box) {
-    MainNode = new Node();
-    MainNode->Build(this->objects);
+void Raytracer::SetUpNode(BoundingBox Box, std::vector<Sphere> Spheres) {
+    MainNode = new Node(Box, Spheres);
 }
 
 unsigned int 

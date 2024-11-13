@@ -23,11 +23,10 @@ public:
     std::atomic<int> PixelCounter;
     int MaxPixel;
     int RayNum;
-    void TestJob();
 
     unsigned AssignJob();
 
-    void SetUpNode(BoundingBox Box);
+    void SetUpNode(BoundingBox Box, std::vector<Sphere> Spheres);
 
     Color GetColor(float u, float v, int x, int y);
 
