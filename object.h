@@ -21,6 +21,10 @@ struct HitResult
     // intersection distance
     float t = FLT_MAX;
 
+    HitResult() {
+        t = FLT_MAX;
+    }
+
     bool HasValue() {
         if (object != nullptr)
             return true;

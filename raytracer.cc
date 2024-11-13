@@ -47,7 +47,6 @@ Raytracer::AssignJob()
     for (int i = 0; i < Cores; i++) {
         Threads.emplace_back([&]() {
 		//Pool.QueueJob([&]() { 
-
             while (true) {
                 size_t index = PixelCounter.fetch_add(1);
 
@@ -176,7 +175,6 @@ Raytracer::TracePath(Ray ray, unsigned n)
             return {0,0,0};
         }
     }
-
     return this->Skybox(ray.RayDir);
 }
 
@@ -193,6 +191,7 @@ Raytracer::BVHRaycast(Ray ray, vec3& hitPoint, vec3& hitNormal, Object*& hitObje
     HitResult hit;
 
     hit = MainNode->BVHIntersect(this->MainNode, ray);
+    this->MainNode->LevelOrderTraversal();
     //for (Object* object : world)
     //{
     //    hit = object->Intersect(ray);

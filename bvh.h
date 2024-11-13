@@ -4,6 +4,7 @@
 #include "object.h"
 #include "sphere.h"
 #include "raytracer.h"
+#include <algorithm>
 #include <iostream>
 
 
@@ -33,7 +34,7 @@ public:
 	}
 
 
-	bool Intersection(Ray ray) {
+	bool BoxIntersection(Ray ray) {
 		float tMin, tMax, tyMin, tyMax, tzMin, tzMax;
 
 		tMin = (this->Min.x - ray.Origin.x) * ray.InvRayDir.x;
@@ -58,6 +59,10 @@ public:
 			return false;
 
 		return true;
+	}
+
+	bool Intersection() {
+
 	}
 
 	vec3 Size() {
@@ -117,7 +122,7 @@ public:
 			SplitAxis = 1;
 		else 
 			SplitAxis = 2;
-			
+		
 	}
 
 	void SplitNode(Node* parent, int depth) {
@@ -162,6 +167,7 @@ public:
 		if (parent->ChildA == nullptr && parent->ChildB == nullptr) 
 		{
 			/// TO DO 
+			std::cout << "SphereCount: " << parent->spheres.size() << std::endl;
 			// LOOP THROUGH IT AND THEN GET THE CLOSEST SPHERE
 			for (Sphere sphere : parent->spheres) {
 				HitResult SphereHit = sphere.Intersect(ray);
@@ -172,10 +178,10 @@ public:
 		}
 		HitResult hitA, hitB;
 
-		if (parent->ChildA && parent->ChildA->bounds.Intersection(ray))
+		if (parent->ChildA && parent->ChildA->bounds.BoxIntersection(ray))
 			hitA = BVHIntersect(parent->ChildA, ray);
 
-		if (parent->ChildB && parent->ChildB->bounds.Intersection(ray))
+		if (parent->ChildB && parent->ChildB->bounds.BoxIntersection(ray))
 			hitB = BVHIntersect(parent->ChildB, ray);
 
 		if (hitA.HasValue() && hitA.t < hit.t)
@@ -195,9 +201,9 @@ public:
 		while (!Queue.empty()) {
 			Node* CurrNode = Queue.front();
 			vec3 size = CurrNode->bounds.Size();
-			std::cout << std::endl;
-			std::cout << "Spheres count: " << CurrNode->spheres.size() << std::endl;
-			std::cout << "Size->  x: " << size.x << ", y: " << size.y << ", z: " << size.z << std::endl;
+			//std::cout << std::endl;
+			//std::cout << "Spheres count: " << CurrNode->spheres.size() << std::endl;
+			//std::cout << "Size->  x: " << size.x << ", y: " << size.y << ", z: " << size.z << std::endl;
 			if (CurrNode->ChildA)
 				Queue.push(CurrNode->ChildA);
 			if (CurrNode->ChildB)
