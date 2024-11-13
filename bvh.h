@@ -33,6 +33,9 @@ public:
 		this->bHasObject = true;
 	}
 
+	bool BoxIntersection2(Ray ray) {
+
+	}
 
 	bool BoxIntersection(Ray ray) {
 		float tMin, tMax, tyMin, tyMax, tzMin, tzMax;
@@ -61,51 +64,6 @@ public:
 		return true;
 	}
 
-	HitResult Intersection2(Ray ray, Sphere sphere) {
-		float maxDist = FLT_MAX;
-		HitResult hit;
-		vec3 oc = ray.Origin - sphere.center;
-		vec3 dir = ray.RayDir;
-		float b = dot(oc, dir);
-
-		// early out if sphere is "behind" ray
-		if (b > 0)
-			return hit;
-
-		float a = dot(dir, dir);
-		float c = dot(oc, oc) - sphere.radius * sphere.radius;
-		float discriminant = b * b - a * c;
-
-		if (discriminant > 0)
-		{
-			constexpr float minDist = 0.001f;
-			float div = 1.0f / a;
-			float sqrtDisc = sqrt(discriminant);
-			float temp = (-b - sqrtDisc) * div;
-			float temp2 = (-b + sqrtDisc) * div;
-
-			if (temp < maxDist && temp > minDist)
-			{
-				vec3 p = ray.PointAt(temp);
-				hit.p = p;
-				hit.normal = (p - sphere.center) * (1.0f / sphere.radius);
-				hit.t = temp;
-				hit.object= &sphere;
-				return hit;
-			}
-			if (temp2 < maxDist && temp2 > minDist)
-			{
-				vec3 p = ray.PointAt(temp2);
-				hit.p = p;
-				hit.normal = (p - sphere.center) * (1.0f / sphere.radius);
-				hit.t = temp2;
-				hit.object = &sphere;
-				return hit;
-			}
-		}
-		return hit;
-	}
-
 	vec3 Size() {
 		return this->Max - this->Min;
 	}
@@ -123,10 +81,14 @@ public:
 
 	Node() {};
 
-	Node(const BoundingBox& box, const std::vector<Sphere>& spheres)
+	Node(BoundingBox box)
+	: bounds(box){
+	}
+
+	Node(BoundingBox box, const std::vector<Sphere> spheres)
 	: bounds(box), spheres(spheres) {
 		Build(spheres);
-		SplitNode(this, 0);
+		//SplitNode(this, 0);
 	}
 
 	~Node() {
@@ -146,12 +108,12 @@ public:
 	}
 
 	void Spilt(Node* node, int depth) {
-		std::cout << "SplitNode" << std::endl;
+		// std::cout << "SplitNode" << std::endl;
 		const int MaxDepth = 32;
 		const int MinSpherePerLeaf = 2;
 
 		if (depth == MaxDepth) {
-			std::cout << "MaxDepth Reached" << std::endl;
+			// std::cout << "MaxDepth Reached" << std::endl;
 			return;
 		}
 
@@ -198,40 +160,56 @@ public:
 		SplitNode(parent->ChildA, depth + 1);
 		SplitNode(parent->ChildB, depth + 1);
 	}
-
-	HitResult BVHIntersect(Node *parent, const Ray& ray) const {
+	//
+	// HitResult BVHIntersect(Node *parent, const Ray& ray) const {
+    std::vector<HitResult> BVHIntersect(Node *parent, const Ray& ray)  {
+        std::vector<HitResult> HitVec;
 		HitResult hit;
 
-		if (parent->spheres.empty())
-			return hit;
+		//if (parent->spheres.empty())
+		//	return HitVec;
 
 		if (parent->ChildA == nullptr && parent->ChildB == nullptr) 
 		{
 			/// TO DO 
-			std::cout << "SphereCount: " << parent->spheres.size() << std::endl;
+			// std::cout << "SphereCount: " << parent->spheres.size() << std::endl;
 			// LOOP THROUGH IT AND THEN GET THE CLOSEST SPHERE
 			for (Sphere sphere : parent->spheres) {
 				HitResult SphereHit = sphere.Intersect(ray);
 				if (SphereHit.HasValue() && SphereHit.t < hit.t)
-					hit = SphereHit;
+                    HitVec.push_back(SphereHit);
 			}
-			return hit;
+			if (HitVec.size() > 0)
+				return HitVec;
+			else 
+				return HitVec;
 		}
-		HitResult hitA, hitB;
+        std::vector<HitResult> hitA, hitB;
 
-		if (parent->ChildA && parent->ChildA->bounds.BoxIntersection(ray))
-			hitA = BVHIntersect(parent->ChildA, ray);
+		//if (parent->ChildA && parent->ChildA->bounds.BoxIntersection(ray))
+		//	hitA = BVHIntersect(parent->ChildA, ray);
+		//if (parent->ChildB && parent->ChildB->bounds.BoxIntersection(ray))
+		//	hitB = BVHIntersect(parent->ChildB, ray);
 
-		if (parent->ChildB && parent->ChildB->bounds.BoxIntersection(ray))
-			hitB = BVHIntersect(parent->ChildB, ray);
+		if (parent->ChildA)
+			if (parent->ChildA->bounds.BoxIntersection(ray))
+				hitA = BVHIntersect(parent->ChildA, ray);
+			else
+				return hitA;
 
-		if (hitA.HasValue() && hitA.t < hit.t)
-			hit = hitA;
+		if (parent->ChildB)
+			if (parent->ChildB->bounds.BoxIntersection(ray))
+				hitB = BVHIntersect(parent->ChildB, ray);
+			else
+				return hitB;
 
-		if (hitB.HasValue() && hitB.t < hit.t)
-			hit = hitB;
+		// if (hitA.HasValue() && hitA.t < hit.t)
+		// 	hit = hitA;
+		//
+		// if (hitB.HasValue() && hitB.t < hit.t)
+		// 	hit = hitB;
 
-		return hit;
+		return HitVec;
 	}
 
 	void LevelOrderTraversal() {

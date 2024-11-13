@@ -27,8 +27,9 @@ Raytracer::~Raytracer() {
 */
 
 
-void Raytracer::SetUpNode(BoundingBox Box, std::vector<Sphere> Spheres) {
-    MainNode = new Node(Box, Spheres);
+void Raytracer::SetUpNode(BoundingBox Box) {
+    MainNode = new Node();
+    MainNode->Build(this->objects);
 }
 
 unsigned int 
@@ -38,7 +39,7 @@ Raytracer::AssignJob()
     size_t MaxPixel = width * height;
     int Cores = std::thread::hardware_concurrency();
     if (Cores > 6)
-		Cores = 6;
+		Cores = 1;
     MaxPixel = this->height * this->width;
     PixelCounter = 0;
 	std::vector<std::thread> Threads;
@@ -162,8 +163,10 @@ Raytracer::TracePath(Ray ray, unsigned n)
     Object* hitObject = nullptr;
     float distance = FLT_MAX;
 
-    if (Raycast(ray, hitPoint, hitNormal, hitObject, distance, this->objects))
+    if (BVHRaycast(ray, hitPoint, hitNormal, hitObject, distance, this->objects))
     {
+        if (hitObject == nullptr)
+            std::cout << "wtd" << std::endl;
         Ray scatteredRay =  Ray(hitObject->ScatterRay(ray, hitPoint, hitNormal));
         if (n < this->bounces)
         {
@@ -183,27 +186,28 @@ Raytracer::TracePath(Ray ray, unsigned n)
 */
 
 bool
-Raytracer::BVHRaycast(Ray ray, vec3& hitPoint, vec3& hitNormal, Object*& hitObject, float& distance, std::vector<Object*> world)
+Raytracer::BVHRaycast(Ray ray, vec3& hitPoint, vec3& hitNormal, Object*& hitObject, float& distance, std::vector<Sphere*> world)
 {
     bool isHit = false;
     HitResult closestHit;
     int numHits = 0;
-    HitResult hit;
+    //HitResult hit;
 
-    if (MainNode->bounds.BoxIntersection(ray)){
+    // if (MainNode->bounds.BoxIntersection(ray)){
+    // }
+    std::vector<HitResult> HitVec;
+    HitVec = MainNode->BVHIntersect(this->MainNode, ray);
+    if (HitVec.size() > 0)
+		std::cout << "HitVec: " << HitVec.size() << std::endl;
+    for (HitResult hit : HitVec) {
+		if (hit.HasValue())
+		{
+			closestHit = hit;
+			closestHit.object = hit.object;
+			isHit = true;
+			numHits++;
+		}
     }
-    hit = MainNode->BVHIntersect(this->MainNode, ray);
-    //for (Object* object : world)
-    //{
-    //    hit = object->Intersect(ray);
-        if (hit.HasValue())
-        {
-            closestHit = hit;
-            closestHit.object = hit.object;
-            isHit = true;
-            numHits++;
-        }
-    //}
 
     hitPoint = closestHit.p;
     hitNormal = closestHit.normal;
@@ -214,7 +218,7 @@ Raytracer::BVHRaycast(Ray ray, vec3& hitPoint, vec3& hitNormal, Object*& hitObje
 }
 
 bool
-Raytracer::Raycast(Ray ray, vec3& hitPoint, vec3& hitNormal, Object*& hitObject, float& distance, std::vector<Object*> world)
+Raytracer::Raycast(Ray ray, vec3& hitPoint, vec3& hitNormal, Object*& hitObject, float& distance, std::vector<Sphere*> world)
 {
     bool isHit = false;
     HitResult closestHit;

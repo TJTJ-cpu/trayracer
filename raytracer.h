@@ -27,7 +27,7 @@ public:
 
     unsigned AssignJob();
 
-    void SetUpNode(BoundingBox Box, std::vector<Sphere> spheres);
+    void SetUpNode(BoundingBox Box);
 
     Color GetColor(float u, float v, int x, int y);
 
@@ -39,12 +39,12 @@ public:
     std::pair<int, int> indexToXY(size_t index) const;
 
     // add object to scene
-    void AddObject(Object* obj);
+    void AddObject(Sphere* obj);
 
     // single raycast, find object
     //static bool Raycast(Ray ray, vec3& hitPoint, vec3& hitNormal, Object*& hitObject, float& distance, std::vector<Object*> objects);
-    bool Raycast(Ray ray, vec3& hitPoint, vec3& hitNormal, Object*& hitObject, float& distance, std::vector<Object*> objects);
-    bool BVHRaycast(Ray ray, vec3& hitPoint, vec3& hitNormal, Object*& hitObject, float& distance, std::vector<Object*> objects);
+    bool Raycast(Ray ray, vec3& hitPoint, vec3& hitNormal, Object*& hitObject, float& distance, std::vector<Sphere*> objects);
+    bool BVHRaycast(Ray ray, vec3& hitPoint, vec3& hitNormal, Object*& hitObject, float& distance, std::vector<Sphere*> objects);
 
     // set camera matrix
     void SetViewMatrix(mat4 val);
@@ -84,10 +84,10 @@ public:
     // Go from canonical to view frustum
     mat4 frustum;
 
-    std::vector<Object*> objects;
+    std::vector<Sphere*> objects;
 };
 
-inline void Raytracer::AddObject(Object* o)
+inline void Raytracer::AddObject(Sphere* o)
 {
     this->objects.push_back(o);
 }
