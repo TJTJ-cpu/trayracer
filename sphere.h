@@ -26,6 +26,8 @@ public:
     vec3 center;
     Material const* const material;
 
+    Sphere();
+
     Sphere(float radius, vec3 center, Material const* const material) : 
         radius(radius),
         center(center),

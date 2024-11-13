@@ -6,6 +6,7 @@
 #include "raytracer.h"
 #include <algorithm>
 #include <iostream>
+#include <vector>
 
 
 class Node;
@@ -158,12 +159,8 @@ public:
 	}
 	//
 	// HitResult BVHIntersect(Node *parent, const Ray& ray) const {
-    std::vector<HitResult> BVHIntersect(Node *parent, const Ray& ray)  {
-        std::vector<HitResult> HitVec;
+    void BVHIntersect(Node *parent, const Ray& ray, std::vector<Sphere*> &Sph)  {
 		HitResult hit;
-
-		//if (parent->spheres.empty())
-		//	return HitVec;
 
 		if (parent->ChildA == nullptr && parent->ChildB == nullptr) 
 		{
@@ -171,41 +168,35 @@ public:
 			// std::cout << "SphereCount: " << parent->spheres.size() << std::endl;
 			// LOOP THROUGH IT AND THEN GET THE CLOSEST SPHERE
 			for (Sphere sphere : parent->spheres) {
-				HitResult SphereHit = sphere.Intersect(ray);
-				if (SphereHit.HasValue() && SphereHit.t < hit.t)
-                    HitVec.push_back(SphereHit);
+                Sph.push_back(&sphere);
+				//HitResult SphereHit = sphere.Intersect(ray);
+				//if (SphereHit.HasValue() && SphereHit.t < hit.t)
+    //                HitVec.push_back(SphereHit);
 			}
-			if (HitVec.size() > 0)
-				return HitVec;
-			else 
-				return HitVec;
+			return;
+			//if (HitVec.size() > 0)
+			//	return;
+			//else 
+			//	return;
 		}
-        std::vector<HitResult> hitA, hitB;
+        std::vector<Sphere*> hitA, hitB;
 
-		//if (parent->ChildA && parent->ChildA->bounds.BoxIntersection(ray))
-		//	hitA = BVHIntersect(parent->ChildA, ray);
-		//if (parent->ChildB && parent->ChildB->bounds.BoxIntersection(ray))
-		//	hitB = BVHIntersect(parent->ChildB, ray);
 
 		if (parent->ChildA)
 			if (parent->ChildA->bounds.BoxIntersection(ray))
-				hitA = BVHIntersect(parent->ChildA, ray);
+				BVHIntersect(parent->ChildA, ray, hitA);
 			else
-				return hitA;
+				return;
+
 
 		if (parent->ChildB)
 			if (parent->ChildB->bounds.BoxIntersection(ray))
-				hitB = BVHIntersect(parent->ChildB, ray);
+				BVHIntersect(parent->ChildB, ray, hitB);
 			else
-				return hitB;
+				return;
 
-		// if (hitA.HasValue() && hitA.t < hit.t)
-		// 	hit = hitA;
-		//
-		// if (hitB.HasValue() && hitB.t < hit.t)
-		// 	hit = hitB;
 
-		return HitVec;
+		return;
 	}
 
 	void LevelOrderTraversal() {

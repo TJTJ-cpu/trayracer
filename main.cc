@@ -17,9 +17,9 @@
 int main(int argc, char* argv[])
 { 
     unsigned w = 1000;
-    unsigned h = 500;
-    int rpp = 5;
-    int ball = 24;
+    unsigned h = 1000;
+    int rpp = 2;
+    int ball = 32;
     int mb = 5;
     for (int i = 0; i < argc; i++) {
         if (strcmp(argv[i], "-w") == 0) {
@@ -67,10 +67,11 @@ int main(int argc, char* argv[])
     mat->color = { 0.5,0.5,0.5 };
     mat->roughness = 0.3;
     Sphere* ground = new Sphere(1000, { 0,-1000, -1 }, mat);
+    std::vector<Sphere> Spheres;
     rt.AddObject(ground);
+	Spheres.push_back(*ground);
     
     std::vector<std::string>MaterialType;
-    std::vector<Sphere> Spheres;
     std::vector<float> SpanVec;
     MaterialType = { "Lambertian", "Conductor", "Dielectric"};
     SpanVec = { 10.0f, 30.0f, 25.0f };
@@ -183,7 +184,8 @@ int main(int argc, char* argv[])
 	//std::cout << "Sphere Amount: " << SphereAmount << std::endl;
     /// RENDERING LOOP
     //while (wnd.IsOpen() && !exit)
-	//auto start2 = std::chrono::high_resolution_clock::now();
+    std::chrono::high_resolution_clock::time_point start2; 
+    std::chrono::high_resolution_clock::time_point end2; 
     //for (int i = 1; i < 25; i ++)
     {
         resetFramebuffer = false;
@@ -218,23 +220,30 @@ int main(int argc, char* argv[])
         }
         double RayNum;
 		auto start = std::chrono::high_resolution_clock::now();
+        //start2 = std::chrono::high_resolution_clock::now();
         // Original
 		//RayNum = rt.Raytrace();
         RayNum = rt.AssignJob();
 		auto end = std::chrono::high_resolution_clock::now();
-
+        //end2 = std::chrono::high_resolution_clock::now();
         std::chrono::duration<float> frameDuration = end - start;
         double DoubleFrameDuration = frameDuration.count();
+
+  //      std::cout << "Number of Cores: " << i;
+		//end2 = std::chrono::high_resolution_clock::now();
+		//std::chrono::duration<float> frameDuration2 = end2 - start2;
+		//std::cout << " - Duration: " << frameDuration2.count() << " sec" << std::endl;
+
         // Printing Info
-		std::cout << "------------------------------" << std::endl;
-		std::cout << "Width: " << width << std::endl;
-		std::cout << "Height: " << height << std::endl;
-		std::cout << "Ray Per Pixel: " << RaysPerPixel << std::endl;
-		std::cout << "Sphere Amount: " << SphereAmount << std::endl;
-        std::cout << "Duration: " << frameDuration.count() << " sec" << std::endl;
-        std::cout << "Total Number of Rays: " << RayNum << std::endl;
-        std::cout << "Total Rays: " << (RayNum / 1'000'000)/DoubleFrameDuration << " MRays/s" << std::endl;
-		std::cout << "------------------------------" << std::endl;
+		 std::cout << "------------------------------" << std::endl;
+		 std::cout << "Width: " << width << std::endl;
+		 std::cout << "Height: " << height << std::endl;
+		 std::cout << "Ray Per Pixel: " << RaysPerPixel << std::endl;
+		 std::cout << "Sphere Amount: " << SphereAmount << std::endl;
+         std::cout << "Duration: " << frameDuration.count() << " sec" << std::endl;
+         std::cout << "Total Number of Rays: " << RayNum << std::endl;
+         std::cout << "Total Rays: " << (RayNum / 1'000'000)/DoubleFrameDuration << " MRays/s" << std::endl;
+		 std::cout << "------------------------------" << std::endl;
 
         frameIndex++;
 
@@ -263,9 +272,6 @@ int main(int argc, char* argv[])
         wnd.Blit((float*)&framebufferCopy[0], width, height);
         wnd.SwapBuffers();
     }
-	//auto end2 = std::chrono::high_resolution_clock::now();
-	//std::chrono::duration<float> frameDuration2 = end2 - start2;
-	//std::cout << "Duration: " << frameDuration2.count() << " sec" << std::endl;
 
     if (wnd.IsOpen())
         wnd.Close();

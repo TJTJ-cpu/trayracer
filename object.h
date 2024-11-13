@@ -6,6 +6,7 @@
 #include <memory>
 
 class Object;
+class Sphere;
 
 //------------------------------------------------------------------------------
 /**
@@ -17,7 +18,7 @@ struct HitResult
     // normal
     vec3 normal;
     // hit object, or nullptr
-    Object* object = nullptr;
+    Sphere* object = nullptr;
     // intersection distance
     float t = FLT_MAX;
 

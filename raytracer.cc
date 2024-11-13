@@ -161,10 +161,8 @@ Raytracer::TracePath(Ray ray, unsigned n)
     Object* hitObject = nullptr;
     float distance = FLT_MAX;
 
-    if (Raycast(ray, hitPoint, hitNormal, hitObject, distance, this->objects))
+    if (BVHRaycast(ray, hitPoint, hitNormal, hitObject, distance, this->objects))
     {
-        if (hitObject == nullptr)
-            std::cout << "wtd" << std::endl;
         Ray scatteredRay =  Ray(hitObject->ScatterRay(ray, hitPoint, hitNormal));
         if (n < this->bounces)
         {
@@ -187,6 +185,7 @@ bool
 Raytracer::BVHRaycast(Ray ray, vec3& hitPoint, vec3& hitNormal, Object*& hitObject, 
     float& distance, std::vector<Sphere*> const &world)
 {
+
     bool isHit = false;
     HitResult closestHit;
     int numHits = 0;
@@ -194,18 +193,20 @@ Raytracer::BVHRaycast(Ray ray, vec3& hitPoint, vec3& hitNormal, Object*& hitObje
 
     // if (MainNode->bounds.BoxIntersection(ray)){
     // }
+    HitResult hit;
     std::vector<HitResult> HitVec;
-    HitVec = MainNode->BVHIntersect(this->MainNode, ray);
-    if (HitVec.size() > 0)
-		std::cout << "HitVec: " << HitVec.size() << std::endl;
-    for (HitResult hit : HitVec) {
-		if (hit.HasValue())
-		{
-			closestHit = hit;
-			closestHit.object = hit.object;
-			isHit = true;
-			numHits++;
-		}
+    std::vector<Sphere*> Spheres;
+    MainNode->BVHIntersect(this->MainNode, ray, Spheres);
+
+    for (Sphere* object : Spheres){
+        hit = object->Intersect(ray);
+        if (hit.HasValue())
+        {
+            closestHit = hit;
+            closestHit.object = object;
+            isHit = true;
+            numHits++;
+        }
     }
 
     hitPoint = closestHit.p;
@@ -225,7 +226,7 @@ Raytracer::Raycast(Ray ray, vec3& hitPoint, vec3& hitNormal, Object*& hitObject,
     int numHits = 0;
     HitResult hit;
 
-    for (Object* object : world)
+    for (Sphere* object : world)
     {
         hit = object->Intersect(ray);
         if (hit.HasValue())
