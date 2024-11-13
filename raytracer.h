@@ -42,8 +42,11 @@ public:
 
     // single raycast, find object
     //static bool Raycast(Ray ray, vec3& hitPoint, vec3& hitNormal, Object*& hitObject, float& distance, std::vector<Object*> objects);
-    bool Raycast(Ray ray, vec3& hitPoint, vec3& hitNormal, Object*& hitObject, float& distance, std::vector<Sphere*> objects);
-    bool BVHRaycast(Ray ray, vec3& hitPoint, vec3& hitNormal, Object*& hitObject, float& distance, std::vector<Sphere*> objects);
+    bool Raycast(Ray ray, vec3& hitPoint, vec3& hitNormal, Object*& hitObject, 
+                 float& distance, std::vector<Sphere*> const &objects);
+
+    bool BVHRaycast(Ray ray, vec3& hitPoint, vec3& hitNormal, Object*& hitObject, 
+                    float& distance, std::vector<Sphere*> const &objects);
 
     // set camera matrix
     void SetViewMatrix(mat4 val);

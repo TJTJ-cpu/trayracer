@@ -36,8 +36,8 @@ Raytracer::AssignJob()
     // Max Pixels
     size_t MaxPixel = width * height;
     int Cores = std::thread::hardware_concurrency();
-    if (Cores > 6)
-		Cores = 1;
+  //  if (Cores > 6)
+		//Cores = 1;
     MaxPixel = this->height * this->width;
     PixelCounter = 0;
 	std::vector<std::thread> Threads;
@@ -161,7 +161,7 @@ Raytracer::TracePath(Ray ray, unsigned n)
     Object* hitObject = nullptr;
     float distance = FLT_MAX;
 
-    if (BVHRaycast(ray, hitPoint, hitNormal, hitObject, distance, this->objects))
+    if (Raycast(ray, hitPoint, hitNormal, hitObject, distance, this->objects))
     {
         if (hitObject == nullptr)
             std::cout << "wtd" << std::endl;
@@ -184,7 +184,8 @@ Raytracer::TracePath(Ray ray, unsigned n)
 */
 
 bool
-Raytracer::BVHRaycast(Ray ray, vec3& hitPoint, vec3& hitNormal, Object*& hitObject, float& distance, std::vector<Sphere*> world)
+Raytracer::BVHRaycast(Ray ray, vec3& hitPoint, vec3& hitNormal, Object*& hitObject, 
+    float& distance, std::vector<Sphere*> const &world)
 {
     bool isHit = false;
     HitResult closestHit;
@@ -216,7 +217,8 @@ Raytracer::BVHRaycast(Ray ray, vec3& hitPoint, vec3& hitNormal, Object*& hitObje
 }
 
 bool
-Raytracer::Raycast(Ray ray, vec3& hitPoint, vec3& hitNormal, Object*& hitObject, float& distance, std::vector<Sphere*> world)
+Raytracer::Raycast(Ray ray, vec3& hitPoint, vec3& hitNormal, Object*& hitObject, 
+    float& distance, std::vector<Sphere*> const &world)
 {
     bool isHit = false;
     HitResult closestHit;
