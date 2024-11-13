@@ -61,8 +61,49 @@ public:
 		return true;
 	}
 
-	bool Intersection() {
+	HitResult Intersection2(Ray ray, Sphere sphere) {
+		float maxDist = FLT_MAX;
+		HitResult hit;
+		vec3 oc = ray.Origin - sphere.center;
+		vec3 dir = ray.RayDir;
+		float b = dot(oc, dir);
 
+		// early out if sphere is "behind" ray
+		if (b > 0)
+			return hit;
+
+		float a = dot(dir, dir);
+		float c = dot(oc, oc) - sphere.radius * sphere.radius;
+		float discriminant = b * b - a * c;
+
+		if (discriminant > 0)
+		{
+			constexpr float minDist = 0.001f;
+			float div = 1.0f / a;
+			float sqrtDisc = sqrt(discriminant);
+			float temp = (-b - sqrtDisc) * div;
+			float temp2 = (-b + sqrtDisc) * div;
+
+			if (temp < maxDist && temp > minDist)
+			{
+				vec3 p = ray.PointAt(temp);
+				hit.p = p;
+				hit.normal = (p - sphere.center) * (1.0f / sphere.radius);
+				hit.t = temp;
+				hit.object= &sphere;
+				return hit;
+			}
+			if (temp2 < maxDist && temp2 > minDist)
+			{
+				vec3 p = ray.PointAt(temp2);
+				hit.p = p;
+				hit.normal = (p - sphere.center) * (1.0f / sphere.radius);
+				hit.t = temp2;
+				hit.object = &sphere;
+				return hit;
+			}
+		}
+		return hit;
 	}
 
 	vec3 Size() {

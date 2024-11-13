@@ -51,7 +51,7 @@ public:
         vec3 oc = ray.Origin - this->center;
         vec3 dir = ray.RayDir;
         float b = dot(oc, dir);
-    
+
         // early out if sphere is "behind" ray
         if (b > 0)
             return hit;

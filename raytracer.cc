@@ -190,8 +190,9 @@ Raytracer::BVHRaycast(Ray ray, vec3& hitPoint, vec3& hitNormal, Object*& hitObje
     int numHits = 0;
     HitResult hit;
 
+    if (MainNode->bounds.BoxIntersection(ray)){
+    }
     hit = MainNode->BVHIntersect(this->MainNode, ray);
-    this->MainNode->LevelOrderTraversal();
     //for (Object* object : world)
     //{
     //    hit = object->Intersect(ray);
