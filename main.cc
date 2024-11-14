@@ -68,8 +68,9 @@ int main(int argc, char* argv[])
     mat->roughness = 0.3;
     Sphere* ground = new Sphere(1000, { 0,-1000, -1 }, mat);
     std::vector<Sphere*> Spheres;
+    rt.SuperBall = ground;
     rt.AddObject(ground);
-	Spheres.push_back(ground);
+	//Spheres.push_back(ground);
     
     std::vector<std::string>MaterialType;
     std::vector<float> SpanVec;

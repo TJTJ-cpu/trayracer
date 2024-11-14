@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <iostream>
 #include <vector>
+#include <cassert>
 
 
 class Node;
@@ -30,12 +31,8 @@ public:
 		Max.x = std::max(Max.x, sphere->center.x + sphere->radius);
 		Max.y = std::max(Max.y, sphere->center.y + sphere->radius);
 		Max.z = std::max(Max.z, sphere->center.z + sphere->radius);
-		Center = (Min + Max) / 2;
+		this->Center = (Min + Max) / 2;
 		this->bHasObject = true;
-	}
-
-	bool BoxIntersection2(Ray ray) {
-
 	}
 
 	bool BoxIntersection(Ray ray) {
@@ -56,31 +53,6 @@ public:
             return false;
 
         return true;
-
-		// float tMin, tMax, tyMin, tyMax, tzMin, tzMax;
-		//
-		// tMin = (this->Min.x - ray.Origin.x) * ray.InvRayDir.x;
-		// tMax = (this->Max.x - ray.Origin.x) * ray.InvRayDir.x;
-		//
-		// tyMin = (this->Min.y - ray.Origin.y) * ray.InvRayDir.y;
-		// tyMax = (this->Max.y - ray.Origin.y) * ray.InvRayDir.y;
-		//
-		// // CHECK POINT ALONG Y-AXIS
-		// if ((tMin > tyMax) || (tyMin > tMax))
-		// 	return false;
-		// // GET THE EARLIEST POINT THAT THE RAY ENTER THE BOX
-		// if (tyMin > tMin)
-		// 	tMin = tyMin;
-		// // GET THE LATEST POINT THAT THE RAY EXIT THE BOX
-		// if (tyMax < tMax)
-		// 	tMax = tyMax;
-		//
-		// tzMin = (this->Min.z - ray.Origin.z) * ray.InvRayDir.z;
-		// tzMax = (this->Max.z - ray.Origin.z) * ray.InvRayDir.z;
-		// if ((tMin > tzMax) || (tzMin > tMax))
-		// 	return false;
-		//
-		// return true;
 	}
 
 	vec3 Size() {
@@ -123,8 +95,17 @@ public:
 		return;
 	}
 
+	int GetTreeSize(Node* root) {
+		if (!this->ChildA && !this->ChildB)
+			return 0;
+		int left = GetTreeSize(this->ChildA);
+		int right = GetTreeSize(this->ChildB);
+
+		return left + right + 1;
+	}
+
 	void SplitNode(Node* parent, int depth) {
-		const int MaxDepth = 3;
+		const int MaxDepth = 10;
 
 		if (depth == MaxDepth || !parent->bounds.bHasObject || parent->spheres.size() <= 3) {
 			return;
@@ -133,52 +114,76 @@ public:
 		vec3 size = parent->bounds.Size();
 		int SpiltAxis = size.x > max(size.y, size.z) ? 0 : size.y > size.z ? 1 : 2;
 		float SplitPos = parent->bounds.Center[SpiltAxis];
-		//std::cout << std::endl;
+		std::cout << std::endl;
 		//std::cout << "Depth-> " << depth << std::endl;
 		//std::cout << "Object Count: " << parent->spheres.size() << std::endl;
 		//std::cout << "SIZE-> x: " << size.x << ", y: " << size.y << ", z: " << size.z << std::endl;
+		//size = parent->bounds.Center;
+		//std::cout << "Center-> x: " << size.x << ", y: " << size.y << ", z: " << size.z << std::endl;
 		//std::cout << "SpiltAxis: " << SpiltAxis << std::endl;
 		//std::cout << "SplitPos: " << SplitPos << std::endl;
 		//std::cout << std::endl;
 
 		parent->ChildA = new Node();
 		parent->ChildB = new Node();
-
+		std::cout << std::endl;
+		std::cout << "SpiltAxis: " << SpiltAxis << std::endl;
+		std::cout << "SplitPos: " << SplitPos << std::endl;
 		for (auto sphere : parent->spheres) {
-			// bool bInA = sphere->center[SpiltAxis] < SplitPos;
-			// Node *Child = bInA ? parent->ChildA : parent->ChildB;
-			// Child->AddSphere(sphere);
-			// Child->bounds.GrowToInclude(sphere);
-
+			vec3 size;
+			size = sphere->center;
+			//std::cout << "Sphere Center: ";
+			//std::cout << "x: " << size.x << ", y: " << size.y << ", z: " << size.z << std::endl;
+			//std::cout << "Sphre Rad: " << sphere->radius << std::endl;
+			//std::cout << "SpiltAxis: " << SpiltAxis << std::endl;
+			//std::cout << "SplitPos: " << SplitPos << std::endl;
             if (bInA(sphere, SpiltAxis, SplitPos)){
-                parent->ChildB->AddSphere(sphere);
-            } else if (bInB(sphere, SpiltAxis, SplitPos)){
                 parent->ChildA->AddSphere(sphere);
+			}
+			else if (bInB(sphere, SpiltAxis, SplitPos)) {
+				parent->ChildB->AddSphere(sphere);
             } else if (bInAB(sphere, SpiltAxis, SplitPos)){
                 parent->ChildA->AddSphere(sphere);
                 parent->ChildB->AddSphere(sphere);
             } else {
-                std::cout << "You're fucked up" << std::endl;
+				assert(false && "ERROR :: SPLITFUNCTION :: NO SUBDIVISION");
             }
-			std::cout << std::endl;
-			std::cout << std::endl;
+			vec3 min = parent->ChildA->bounds.Min;
+			vec3 max = parent->ChildA->bounds.Max;
+			vec3 diff = max - min;
+			float length = std::sqrt(diff.x * diff.x + diff.y * diff.y + diff.z * diff.z);
 
 			//size = Child->bounds.Size();
 			//std::cout << "x: " << size.x << ", y: " << size.y << ", z: " << size.z << std::endl;
 		}
+		//std::cout << std::endl;
+		//std::cout << "Parent ChildA Spheres: " << parent->ChildA->spheres.size() << std::endl;
+		//std::cout << "Parent ChildB Spheres: " << parent->ChildB->spheres.size() << std::endl;
+		//std::cout << std::endl;
 		SplitNode(parent->ChildA, depth + 1);
 		SplitNode(parent->ChildB, depth + 1);
 	}
 
+	void PrintBallVec() {
+		int i = 1;
+		vec3 size;
+		for (auto s : this->spheres) {
+			size = s->center;
+			std::cout << "Sphere " << i << "->";
+			std::cout << " x: " << size.x << ", y: " << size.y << ", z: " << size.z << std::endl;
+			i++;
+		}
+	}
+
     bool bInAB(Sphere* sp, int axis, float Spos){
-		printBoundsCheck(sp, axis, Spos);
+		//std::cout << "bInAB: " << (sp->center[axis] - sp->radius) << " < " << Spos << " && " << (sp->center[axis] + sp->radius) << " > " << Spos << " => Condition: " << ((sp->center[axis] - sp->radius < Spos && sp->center[axis] + sp->radius > Spos) ? "true" : "false") << std::endl;
         if (sp->center[axis] - sp->radius < Spos && sp->center[axis] + sp->radius > Spos)
             return true;
         return false;
     }
 
     bool bInB(Sphere* sp, int axis, float Spos){
-		printBoundsCheck(sp, axis, Spos);
+		//std::cout << "bInB: " << (sp->center[axis] - sp->radius) << " > " << Spos << " && " << (sp->center[axis] + sp->radius) << " > " << Spos << " => Condition: " << ((sp->center[axis] - sp->radius > Spos && sp->center[axis] + sp->radius > Spos) ? "true" : "false") << std::endl;
         if (sp->center[axis] - sp->radius > Spos && sp->center[axis] + sp->radius > Spos)
             return true;
         return false;
@@ -186,22 +191,12 @@ public:
     }
 
     bool bInA(Sphere* sp, int axis, float Spos){
-		printBoundsCheck(sp, axis, Spos);
+		//std::cout << "bInA: " << (sp->center[axis] - sp->radius) << " < " << Spos << " && " << (sp->center[axis] + sp->radius) << " < " << Spos << " => Condition: " << ((sp->center[axis] - sp->radius < Spos && sp->center[axis] + sp->radius < Spos) ? "true" : "false") << std::endl;
         if (sp->center[axis] - sp->radius < Spos && sp->center[axis] + sp->radius < Spos)
             return true;
         return false;
         
     }
-
-	void printBoundsCheck(Sphere* sp, int axis, float Spos) {
-		float lower_bound = sp->center[axis] - sp->radius;
-		float upper_bound = sp->center[axis] + sp->radius;
-
-		std::cout << "Debugging Bounds Check:" << std::endl;
-		std::cout << "  Lower Bound (sp->center[axis] - sp->radius): " << lower_bound << std::endl;
-		std::cout << "  Upper Bound (sp->center[axis] + sp->radius): " << upper_bound << std::endl;
-		std::cout << "  Spos: " << Spos << std::endl;
-	}
 
 	//std::vector<Sphere*>& BVHIntersect(Node* parent, const Ray& ray) {
 	Node* BVHIntersect(Node* parent, const Ray& ray) {
