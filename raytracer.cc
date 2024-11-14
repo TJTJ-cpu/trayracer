@@ -190,10 +190,31 @@ Raytracer::BVHRaycast(Ray ray, vec3& hitPoint, vec3& hitNormal, Object*& hitObje
     HitResult hit;
     std::vector<HitResult> HitVec;
     std::vector<Sphere*> Spheres;
-    Node* CurrNode = new Node();
-    CurrNode = MainNode->BVHIntersect(this->MainNode, ray);
-    Spheres = CurrNode->spheres;
-    for (Sphere* object : Spheres){
+    //MainNode->BVHIntersect(this->MainNode, ray, Spheres);
+    std::queue<Node*> NodeQueue;
+    NodeQueue.push(MainNode);
+    Node a = Node();
+    Node* Curr = MainNode;
+  //  while (!NodeQueue.empty()) {
+  //      Curr = NodeQueue.front();
+  //      NodeQueue.pop();
+  //      if (Curr->ChildA && Curr->ChildA->bounds.BoxIntersection(ray)) 
+  //          NodeQueue.push(Curr->ChildA);
+
+		//if (Curr->ChildB && Curr->ChildB->bounds.BoxIntersection(ray)) 
+		//	NodeQueue.push(Curr->ChildB);
+  //  }
+    while (true) {
+        if (Curr->ChildA && Curr->ChildA->bounds.BoxIntersection(ray))
+            Curr = Curr->ChildA;
+        else if (Curr->ChildB && Curr->ChildB->bounds.BoxIntersection(ray))
+            Curr = Curr->ChildB;
+        else
+            break;
+    }
+
+    for (Sphere* object : Curr->spheres){
+        // add super ball
         hit = object->Intersect(ray);
         if (hit.HasValue())
         {

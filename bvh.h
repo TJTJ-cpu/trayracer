@@ -13,6 +13,11 @@
 class Node;
 class BoundingBox;
 
+template<typename T>
+bool IsInVec(std::vector<T> vec, T target) {
+	return (std::find(vec.begin(), vec.end(), target) != vec.end());
+}
+
 
 class BoundingBox 
 {
@@ -104,6 +109,63 @@ public:
 		return left + right + 1;
 	}
 
+	void FindBestSplit(Node* Root, int &SplitAxis, float &SplitPos) {
+		int Iter = 1000;
+		int CurrentBestResult = 2147483647;
+		float Candidate, Length;
+		float BestCadidate = FLT_MAX;
+		int Result;
+		for (int j = 0; j < 3; j++) {
+			float Scale = (this->bounds.Max[j] - this->bounds.Min[j]) / Iter;
+			Length = this->bounds.Max[j] - this->bounds.Min[j];
+			for (int i = 0; i < Iter; i++) {
+				Candidate = (Length / Iter) * i;
+				Result = EvaluateSplit(Root, j, Candidate);
+				if (Result < CurrentBestResult) {
+					SplitAxis = j;
+					SplitPos = Candidate;
+					CurrentBestResult = Result;
+				}
+			}
+		}
+		BVHTEST(Root, SplitAxis, SplitPos);
+	}
+
+	int EvaluateSplit(Node* RootAxis, int Axis, float Pos) {
+		int MaxSpheres = RootAxis->spheres.size();
+		int IdealSphere = MaxSpheres / 2;
+		std::vector<Sphere*> Spheres;
+
+		for (auto sphere : RootAxis->spheres) {
+			if (bInA(sphere, Axis, Pos)) {
+				Spheres.push_back(sphere);
+			}
+			else if (bInAB(sphere, Axis, Pos)) {
+				Spheres.push_back(sphere);
+			}
+		}
+
+		int Result = IdealSphere - Spheres.size();
+		return abs(Result);
+	}
+
+	void BVHTEST(Node* RootAxis, int Axis, float Pos) {
+		int MaxSpheres = RootAxis->spheres.size();
+		std::vector<Sphere*> Spheres;
+
+		for (auto sphere : RootAxis->spheres) {
+			if (bInA(sphere, Axis, Pos)) {
+				Spheres.push_back(sphere);
+			}
+			else if (bInAB(sphere, Axis, Pos)) {
+				Spheres.push_back(sphere);
+			}
+		}
+		std::cout << "Total Sphere: " << MaxSpheres << std::endl;
+		std::cout << "A Sphere: " << Spheres.size() << std::endl;
+		std::cout << std::endl;
+	}
+
 	void SplitNode(Node* parent, int depth) {
 		const int MaxDepth = 10;
 
@@ -111,11 +173,10 @@ public:
 			return;
 		}
 
-		vec3 size = parent->bounds.Size();
-		int SpiltAxis = size.x > max(size.y, size.z) ? 0 : size.y > size.z ? 1 : 2;
-		float SplitPos = parent->bounds.Center[SpiltAxis];
-		std::cout << std::endl;
-		//std::cout << "Depth-> " << depth << std::endl;
+		int SpiltAxis;
+		float SplitPos;
+
+		std::cout << "Depth-> " << depth << std::endl;
 		//std::cout << "Object Count: " << parent->spheres.size() << std::endl;
 		//std::cout << "SIZE-> x: " << size.x << ", y: " << size.y << ", z: " << size.z << std::endl;
 		//size = parent->bounds.Center;
@@ -123,36 +184,37 @@ public:
 		//std::cout << "SpiltAxis: " << SpiltAxis << std::endl;
 		//std::cout << "SplitPos: " << SplitPos << std::endl;
 		//std::cout << std::endl;
-
+		FindBestSplit(parent, SpiltAxis, SplitPos);
 		parent->ChildA = new Node();
 		parent->ChildB = new Node();
-		std::cout << std::endl;
-		std::cout << "SpiltAxis: " << SpiltAxis << std::endl;
-		std::cout << "SplitPos: " << SplitPos << std::endl;
+		//std::cout << std::endl;
+		//std::cout << "SpiltAxis: " << SpiltAxis << std::endl;
+		//std::cout << "SplitPos: " << SplitPos << std::endl;
 		for (auto sphere : parent->spheres) {
-			vec3 size;
-			size = sphere->center;
+			//vec3 size;
+			//size = sphere->center;
 			//std::cout << "Sphere Center: ";
 			//std::cout << "x: " << size.x << ", y: " << size.y << ", z: " << size.z << std::endl;
 			//std::cout << "Sphre Rad: " << sphere->radius << std::endl;
 			//std::cout << "SpiltAxis: " << SpiltAxis << std::endl;
 			//std::cout << "SplitPos: " << SplitPos << std::endl;
-            if (bInA(sphere, SpiltAxis, SplitPos)){
-                parent->ChildA->AddSphere(sphere);
+			//std::cout << std::endl;
+            if (bInA(sphere, SpiltAxis, SplitPos)) {
+				parent->ChildA->AddSphere(sphere);
 			}
 			else if (bInB(sphere, SpiltAxis, SplitPos)) {
 				parent->ChildB->AddSphere(sphere);
-            } else if (bInAB(sphere, SpiltAxis, SplitPos)){
+            } else if (bInAB(sphere, SpiltAxis, SplitPos))
+			{
                 parent->ChildA->AddSphere(sphere);
                 parent->ChildB->AddSphere(sphere);
             } else {
 				assert(false && "ERROR :: SPLITFUNCTION :: NO SUBDIVISION");
             }
-			vec3 min = parent->ChildA->bounds.Min;
-			vec3 max = parent->ChildA->bounds.Max;
-			vec3 diff = max - min;
-			float length = std::sqrt(diff.x * diff.x + diff.y * diff.y + diff.z * diff.z);
-
+			//vec3 min = parent->ChildA->bounds.Min;
+			//vec3 max = parent->ChildA->bounds.Max;
+			//vec3 diff = max - min;
+			//float length = std::sqrt(diff.x * diff.x + diff.y * diff.y + diff.z * diff.z);
 			//size = Child->bounds.Size();
 			//std::cout << "x: " << size.x << ", y: " << size.y << ", z: " << size.z << std::endl;
 		}
@@ -163,6 +225,7 @@ public:
 		SplitNode(parent->ChildA, depth + 1);
 		SplitNode(parent->ChildB, depth + 1);
 	}
+
 
 	void PrintBallVec() {
 		int i = 1;
@@ -199,57 +262,26 @@ public:
     }
 
 	//std::vector<Sphere*>& BVHIntersect(Node* parent, const Ray& ray) {
-	Node* BVHIntersect(Node* parent, const Ray& ray) {
+	void BVHIntersect(Node* parent, const Ray& ray, std::vector<Sphere*> &s) {
 		if (parent->ChildA == nullptr && parent->ChildB == nullptr) {
-			return parent;
+			for (auto sp : parent->spheres)
+				s.push_back(sp);
+			//s.insert(s.end(), parent->spheres.begin(), parent->spheres.end());
+			return;
 		}
 
-		std::vector<Sphere*> hitA, hitB, nullSph;
-		Node* ParA = new Node();
-		Node* ParB = new Node();
-		Node* ParT = new Node();
 
 		// Check intersection with ChildA's bounding box and recurse if hit
 		if (parent->ChildA && parent->ChildA->bounds.BoxIntersection(ray)) {
-			ParA = BVHIntersect(parent->ChildA, ray);
+			BVHIntersect(parent->ChildA, ray, s);
 		}
 
 		// Check intersection with ChildB's bounding box and recurse if hit
 		if (parent->ChildB && parent->ChildB->bounds.BoxIntersection(ray)) {
-			ParB = BVHIntersect(parent->ChildB, ray);
+			BVHIntersect(parent->ChildB, ray, s);
 		}
 
-		return ParT;
 	}
-
- //   std::vector<Sphere*>& BVHIntersect(Node *parent, const Ray& ray) {
-	//	HitResult hit;
-
-	//	if (parent->ChildA == nullptr && parent->ChildB == nullptr) 
-	//	{
-	//		return parent->spheres;
-	//	}
-	//	else 
-	//		recursice
- //       std::vector<Sphere*> hitA, hitB;
-
-
-	//	if (parent->ChildA)
-	//		if (parent->ChildA->bounds.BoxIntersection(ray))
-	//			BVHIntersect(parent->ChildA, ray, hitA);
-	//		else
-	//			return;
-
-
-	//	if (parent->ChildB)
-	//		if (parent->ChildB->bounds.BoxIntersection(ray))
-	//			BVHIntersect(parent->ChildB, ray, hitB);
-	//		else
-	//			return;
-
-
-	//	return;
-	//}
 
 	void LevelOrderTraversal() {
 		if (!this)

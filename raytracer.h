@@ -19,7 +19,6 @@ public:
     ~Raytracer();
 
     Node *MainNode;
-    Sphere* SuperBall;
     ThreadPool Pool;
     std::atomic<int> PixelCounter;
     int MaxPixel;
