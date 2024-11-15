@@ -110,6 +110,45 @@ public:
 		return left + right + 1;
 	}
 
+	void FindNoOverlapSplit(Node* Root, int& SplitAxis, float& SplitPos) {
+		int Iter = 50000;
+		int CurrentBestResult = 2147483647;
+		float Candidate, Length;
+		float BestCadidate = FLT_MAX;
+		int Result;
+		for (int j = 0; j < 3; j++) {
+			float Scale = (this->bounds.Max[j] - this->bounds.Min[j]) / Iter;
+			Length = this->bounds.Max[j] - this->bounds.Min[j];
+			for (int i = 0; i < Iter; i++) {
+				Candidate = (Length / Iter) * i;
+				Result = EvaluateNoOverlapSplit(Root, j, Candidate);
+				if (Result < CurrentBestResult) {
+					SplitAxis = j;
+					SplitPos = Candidate;
+					CurrentBestResult = Result;
+				}
+			}
+		}
+
+	}
+
+	int EvaluateNoOverlapSplit(Node* RootAxis, int Axis, float Pos) {
+		int MaxSpheres = RootAxis->spheres.size();
+		int IdealSphere = MaxSpheres / 2;
+		std::vector<Sphere*> Spheres;
+
+		for (auto sphere : RootAxis->spheres) {
+			if (bInAB(sphere, Axis, Pos))
+				return 2147483647;
+
+			if (bInA(sphere, Axis, Pos)) 
+				Spheres.push_back(sphere);
+		}
+
+		int Result = IdealSphere - Spheres.size();
+		return abs(Result);
+	}
+
 	void FindBestSplit(Node* Root, int &SplitAxis, float &SplitPos) {
 		int Iter = 10000;
 		int CurrentBestResult = 2147483647;
@@ -183,15 +222,9 @@ public:
 		int SpiltAxis;
 		float SplitPos;
 
-		//std::cout << "Depth-> " << depth << std::endl;
-		//std::cout << "Object Count: " << parent->spheres.size() << std::endl;
-		//std::cout << "SIZE-> x: " << size.x << ", y: " << size.y << ", z: " << size.z << std::endl;
-		//size = parent->bounds.Center;
-		//std::cout << "Center-> x: " << size.x << ", y: " << size.y << ", z: " << size.z << std::endl;
-		//std::cout << "SpiltAxis: " << SpiltAxis << std::endl;
-		//std::cout << "SplitPos: " << SplitPos << std::endl;
-		//std::cout << std::endl;
 		FindBestSplit(parent, SpiltAxis, SplitPos);
+		//NormalSplit(parent, SpiltAxis, SplitPos);
+		//FindNoOverlapSplit(parent, SpiltAxis, SplitPos);
 		parent->ChildA = new Node();
 		parent->ChildB = new Node();
 		//std::cout << std::endl;
@@ -216,8 +249,8 @@ public:
 			}
 			else if (bInB(sphere, SpiltAxis, SplitPos)) {
 				parent->ChildB->AddSphere(sphere);
-            } else if (bInAB(sphere, SpiltAxis, SplitPos))
-			{
+            }
+			else if (bInAB(sphere, SpiltAxis, SplitPos)) {
                 parent->ChildA->AddSphere(sphere);
                 parent->ChildB->AddSphere(sphere);
             } else {
@@ -237,6 +270,11 @@ public:
 		SplitNode(parent->ChildB, depth + 1);
 	}
 
+	void NormalSplit(Node* Root, int &SplitAxis, float &SplitPos) {
+		vec3 size = Root->bounds.Size();
+		SplitAxis = size.x > max(size.y, size.z) ? 0 : size.y > size.z ? 1 : 2;
+		SplitPos = Root->bounds.Center[SplitAxis];
+	}
 
 	void PrintBallVec() {
 		int i = 1;
@@ -251,7 +289,7 @@ public:
 
     bool bInAB(Sphere* sp, int axis, float Spos){
 		//std::cout << "bInAB: " << (sp->center[axis] - sp->radius) << " < " << Spos << " && " << (sp->center[axis] + sp->radius) << " > " << Spos << " => Condition: " << ((sp->center[axis] - sp->radius < Spos && sp->center[axis] + sp->radius > Spos) ? "true" : "false") << std::endl;
-        if (sp->center[axis] - sp->radius < Spos && sp->center[axis] + sp->radius > Spos)
+        if (sp->center[axis] - sp->radius <= Spos && sp->center[axis] + sp->radius >= Spos)
             return true;
         return false;
     }
@@ -266,7 +304,7 @@ public:
 
     bool bInA(Sphere* sp, int axis, float Spos){
 		//std::cout << "bInA: " << (sp->center[axis] - sp->radius) << " < " << Spos << " && " << (sp->center[axis] + sp->radius) << " < " << Spos << " => Condition: " << ((sp->center[axis] - sp->radius < Spos && sp->center[axis] + sp->radius < Spos) ? "true" : "false") << std::endl;
-        if (sp->center[axis] - sp->radius < Spos && sp->center[axis] + sp->radius < Spos)
+        if (sp->center[axis] - sp->radius <= Spos && sp->center[axis] + sp->radius <= Spos)
             return true;
         return false;
         
@@ -312,37 +350,39 @@ public:
 		}
 	}
 
-	bool RaySphereTest(Ray &ray, HitResult &closestHit) {
-	HitResult hit;
-	bool isHit = false;
-	std::stack<Node*> NodeStack;
-	NodeStack.push(this);
-	// stack, stackIndex
-	// while stack != 0
-	while (!NodeStack.empty()) {
-		Node* Curr = NodeStack.top();
-		NodeStack.pop();
-		//std::cout << "Stack Size: " << NodeStack.size() << std::endl;
-		if (Curr->ChildA == nullptr && Curr->ChildB == nullptr) {
-			for (Sphere* object : Curr->spheres){
-				// add super ball
-				hit = object->Intersect(ray);
-				if (hit.HasValue())
-				{
-					closestHit = hit;
-					closestHit.object = object;
-					isHit = true;
+	//bool RaySphereTest(Ray& ray, HitResult& closestHit, std::vector<Sphere*> &spheres) {
+	bool RaySphereTest(Ray& ray, HitResult& closestHit) {
+		HitResult hit;
+		bool isHit = false;
+		std::stack<Node*> NodeStack;
+		NodeStack.push(this);
+
+		while (!NodeStack.empty()) {
+			Node* Curr = NodeStack.top();
+			NodeStack.pop();
+			//std::cout << "Stack Size: " << NodeStack.size() << std::endl;
+			if (Curr->ChildA == nullptr && Curr->ChildB == nullptr) {
+				for (Sphere* object : Curr->spheres) {
+					//	if (!IsInVec(spheres, object))
+					//		spheres.push_back(object);
+					hit = object->Intersect(ray, hit.t);
+					if (hit.HasValue())
+					{
+						//assert(hit.t < closestHit.t);
+						closestHit = hit;
+						closestHit.object = object;
+						isHit = true;
+					}
 				}
 			}
+			else {
+				if (Curr->ChildA && Curr->ChildA->bounds.BoxIntersection(ray))
+					NodeStack.push(Curr->ChildA);
+				if (Curr->ChildB && Curr->ChildB->bounds.BoxIntersection(ray))
+					NodeStack.push(Curr->ChildB);
+			}
 		}
-		else {
-			if (Curr->ChildA && Curr->ChildA->bounds.BoxIntersection(ray))
-				NodeStack.push(Curr->ChildA);
-			if (Curr->ChildB && Curr->ChildB->bounds.BoxIntersection(ray))
-				NodeStack.push(Curr->ChildB);
-		}
-	}
-	return isHit;
+		return isHit;
 	}
 };
 

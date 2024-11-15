@@ -46,9 +46,9 @@ public:
         return material->color;
     }
 
-	HitResult Intersect(Ray ray) override
+	HitResult Intersect(Ray ray, float maxDist) override
     {
-        float maxDist = FLT_MAX;
+        //float maxDist = FLT_MAX;
         HitResult hit;
         vec3 oc = ray.Origin - this->center;
         vec3 dir = ray.RayDir;

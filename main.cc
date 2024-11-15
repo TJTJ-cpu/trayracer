@@ -16,10 +16,10 @@
 
 int main(int argc, char* argv[])
 { 
-    unsigned w = 400;
-    unsigned h = 400;
+    unsigned w = 1000;
+    unsigned h = 1000;
     int rpp = 2;
-    int ball = 32;
+    int ball = 64;
     int mb = 5;
     for (int i = 0; i < argc; i++) {
         if (strcmp(argv[i], "-w") == 0) {
