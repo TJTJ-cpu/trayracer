@@ -1,49 +1,43 @@
 #pragma once
-#include "ray.h"
-#include "vec3.h"
-#include "object.h"
-#include "sphere.h"
-#include "raytracer.h"
-#include <algorithm>
 #include <iostream>
-#include <vector>
-#include <cassert>
+#include "NodeBox.h"
 
-struct BBox {
-	vec3 Min;
-	vec3 Max;
+struct BVH {
+	std::vector<NewNode> Nodes;
+	std::vector<size_t> SpheresIndex;
 
-	BBox() {};
-	BBox(const vec3& Mn, const vec3& Mx) : Min(Mn), Max(Mx) {}
-	explicit BBox(const vec3& Point) : BBox(Point, Point) {}
+	BVH() {};
 
-	BBox& Extend(const BBox& other) {
-		Min = min(Min, other.Min);
-		Max = max(Max, other.Max);
+	static void Build(const BBox* box, const vec3* centers, size_t sphereCount) {
+		BVH bvh;
+		bvh.SpheresIndex.resize(sphereCount);
+		// Add val to vec sequentially start from 0
+		std::iota(bvh.SpheresIndex.begin(), bvh.SpheresIndex.end(), 0);
+
+		bvh.Nodes.resize(2 * sphereCount - 1);
+		bvh.Nodes[0].SpheresCount = sphereCount;
+		bvh.Nodes[0].FirstIndex = 0;
+
+		// Track number of node created
+		size_t NodeCount = 1;
+		BulidRecursive(bvh, 0, NodeCount, box, centers);
+		// Resize after bulid
+		bvh.Nodes.resize(NodeCount);
 	}
 
-	vec3 Size() {
-		return Max - Min;
-	}
+	static void BulidRecursive(BVH& bvh, size_t NodeIndex, size_t& NodeCount, const BBox* bboxes, const vec3* centers) {
+		auto& node = bvh.Nodes[NodeIndex];
+		assert(node.IsLeaf());
 
-	int LargestAxis() {
-		vec3 s = Size();
-		int Axis = 0;
-		Axis = s.x > max(s.y, s.z) ? 0 : s.y > s.z ? 1 : 2;
-		return Axis;
+		node.bbox = BBox::Empty();
+		// Iterate throught sphree in node
+		for (size_t i = 0; i < node.SpheresCount; i ++ ) {
+			// Threshold set in NodeBox.h
+			if (node.SpheresCount <= build_config.MaxPrim)
+				return;
+			// Get the boundign box using index, and expand node's boundin box
+			node.bbox.Extend(bboxes[bvh.SpheresIndex[node.FirstIndex + i]]);
+		}
 	}
-
-	// Calculate half of the surface area
-	float HalfArea() {
-		vec3 s = Size();
-		return (s[0] + s[1]) * s[2] + s[0] * s[1];
-	}
-
-	static BBox Empty() {
-		return BBox(
-			vec3(+std::numeric_limits<float>::max()),
-			vec3(-std::numeric_limits<float>::max());
-		)
-	}
-
 };
+
