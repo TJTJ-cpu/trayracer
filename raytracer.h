@@ -22,7 +22,7 @@ public:
     ThreadPool Pool;
     std::atomic<int> PixelCounter;
     int MaxPixel;
-    int RayNum;
+    int RayNum = 0;
 
     unsigned AssignJob();
 

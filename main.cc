@@ -16,8 +16,8 @@
 
 int main(int argc, char* argv[])
 { 
-    unsigned w = 1000;
-    unsigned h = 1000;
+    unsigned w = 400;
+    unsigned h = 400;
     int rpp = 2;
     int ball = 32;
     int mb = 5;

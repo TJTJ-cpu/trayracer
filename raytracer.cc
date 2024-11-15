@@ -182,28 +182,18 @@ Raytracer::BVHRaycast(Ray ray, vec3& hitPoint, vec3& hitNormal, Object*& hitObje
 
     bool isHit = false;
     HitResult closestHit;
-    int numHits = 0;
+    //int numHits = 0;
     //HitResult hit;
 
     // if (MainNode->bounds.BoxIntersection(ray)){
     // }
     HitResult hit;
-    std::vector<HitResult> HitVec;
-    std::vector<Sphere*> Spheres;
+    //std::vector<HitResult> HitVec;
     //MainNode->BVHIntersect(this->MainNode, ray, Spheres);
-    std::queue<Node*> NodeQueue;
-    NodeQueue.push(MainNode);
-    Node a = Node();
+    //std::queue<Node*> NodeQueue;
+    //NodeQueue.push(MainNode);
+    //Node a = Node();
     Node* Curr = MainNode;
-  //  while (!NodeQueue.empty()) {
-  //      Curr = NodeQueue.front();
-  //      NodeQueue.pop();
-  //      if (Curr->ChildA && Curr->ChildA->bounds.BoxIntersection(ray)) 
-  //          NodeQueue.push(Curr->ChildA);
-
-		//if (Curr->ChildB && Curr->ChildB->bounds.BoxIntersection(ray)) 
-		//	NodeQueue.push(Curr->ChildB);
-  //  }
     while (true) {
         if (Curr->ChildA && Curr->ChildA->bounds.BoxIntersection(ray))
             Curr = Curr->ChildA;
@@ -213,17 +203,18 @@ Raytracer::BVHRaycast(Ray ray, vec3& hitPoint, vec3& hitNormal, Object*& hitObje
             break;
     }
 
-    for (Sphere* object : Curr->spheres){
-        // add super ball
-        hit = object->Intersect(ray);
-        if (hit.HasValue())
-        {
-            closestHit = hit;
-            closestHit.object = object;
-            isHit = true;
-            numHits++;
-        }
-    }
+    isHit = this->MainNode->RaySphereTest(ray, closestHit);
+    //for (Sphere* object : Curr->spheres){
+    //    // add super ball
+    //    hit = object->Intersect(ray);
+    //    if (hit.HasValue())
+    //    {
+    //        closestHit = hit;
+    //        closestHit.object = object;
+    //        isHit = true;
+    //        //numHits++;
+    //    }
+    //}
 
     hitPoint = closestHit.p;
     hitNormal = closestHit.normal;

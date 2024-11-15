@@ -8,6 +8,7 @@
 #include <iostream>
 #include <vector>
 #include <cassert>
+#include <stack>
 
 
 class Node;
@@ -110,7 +111,7 @@ public:
 	}
 
 	void FindBestSplit(Node* Root, int &SplitAxis, float &SplitPos) {
-		int Iter = 1000;
+		int Iter = 10000;
 		int CurrentBestResult = 2147483647;
 		float Candidate, Length;
 		float BestCadidate = FLT_MAX;
@@ -128,7 +129,7 @@ public:
 				}
 			}
 		}
-		BVHTEST(Root, SplitAxis, SplitPos);
+		//BVHTEST(Root, SplitAxis, SplitPos);
 	}
 
 	int EvaluateSplit(Node* RootAxis, int Axis, float Pos) {
@@ -136,7 +137,13 @@ public:
 		int IdealSphere = MaxSpheres / 2;
 		std::vector<Sphere*> Spheres;
 
+
 		for (auto sphere : RootAxis->spheres) {
+			//if (sphere->center[Axis] <= Pos)
+			//	Spheres.push_back(sphere);
+			//else if (sphere->center[Axis] > Pos)
+			//	Spheres.push_back(sphere);
+
 			if (bInA(sphere, Axis, Pos)) {
 				Spheres.push_back(sphere);
 			}
@@ -169,14 +176,14 @@ public:
 	void SplitNode(Node* parent, int depth) {
 		const int MaxDepth = 10;
 
-		if (depth == MaxDepth || !parent->bounds.bHasObject || parent->spheres.size() <= 3) {
+		if (depth == MaxDepth || !parent->bounds.bHasObject || parent->spheres.size() <= 5) {
 			return;
 		}
 
 		int SpiltAxis;
 		float SplitPos;
 
-		std::cout << "Depth-> " << depth << std::endl;
+		//std::cout << "Depth-> " << depth << std::endl;
 		//std::cout << "Object Count: " << parent->spheres.size() << std::endl;
 		//std::cout << "SIZE-> x: " << size.x << ", y: " << size.y << ", z: " << size.z << std::endl;
 		//size = parent->bounds.Center;
@@ -198,6 +205,11 @@ public:
 			//std::cout << "Sphre Rad: " << sphere->radius << std::endl;
 			//std::cout << "SpiltAxis: " << SpiltAxis << std::endl;
 			//std::cout << "SplitPos: " << SplitPos << std::endl;
+			// Center Split
+			//if (sphere->center[SpiltAxis] <= SplitPos)
+			//	parent->ChildA->AddSphere(sphere);
+			//else if (sphere->center[SpiltAxis] > SplitPos)
+			//	parent->ChildB->AddSphere(sphere);
 			//std::cout << std::endl;
             if (bInA(sphere, SpiltAxis, SplitPos)) {
 				parent->ChildA->AddSphere(sphere);
@@ -211,6 +223,9 @@ public:
             } else {
 				assert(false && "ERROR :: SPLITFUNCTION :: NO SUBDIVISION");
             }
+			//std::cout << "Child A Size: " << parent->ChildA->spheres.size() << std::endl;
+			//std::cout << "Child B Size: " << parent->ChildB->spheres.size() << std::endl;
+			//std::cout << std::endl;
 			//vec3 min = parent->ChildA->bounds.Min;
 			//vec3 max = parent->ChildA->bounds.Max;
 			//vec3 diff = max - min;
@@ -218,10 +233,6 @@ public:
 			//size = Child->bounds.Size();
 			//std::cout << "x: " << size.x << ", y: " << size.y << ", z: " << size.z << std::endl;
 		}
-		//std::cout << std::endl;
-		//std::cout << "Parent ChildA Spheres: " << parent->ChildA->spheres.size() << std::endl;
-		//std::cout << "Parent ChildB Spheres: " << parent->ChildB->spheres.size() << std::endl;
-		//std::cout << std::endl;
 		SplitNode(parent->ChildA, depth + 1);
 		SplitNode(parent->ChildB, depth + 1);
 	}
@@ -270,7 +281,6 @@ public:
 			return;
 		}
 
-
 		// Check intersection with ChildA's bounding box and recurse if hit
 		if (parent->ChildA && parent->ChildA->bounds.BoxIntersection(ray)) {
 			BVHIntersect(parent->ChildA, ray, s);
@@ -300,6 +310,39 @@ public:
 				Queue.push(CurrNode->ChildB);
 			Queue.pop();
 		}
+	}
+
+	bool RaySphereTest(Ray &ray, HitResult &closestHit) {
+	HitResult hit;
+	bool isHit = false;
+	std::stack<Node*> NodeStack;
+	NodeStack.push(this);
+	// stack, stackIndex
+	// while stack != 0
+	while (!NodeStack.empty()) {
+		Node* Curr = NodeStack.top();
+		NodeStack.pop();
+		//std::cout << "Stack Size: " << NodeStack.size() << std::endl;
+		if (Curr->ChildA == nullptr && Curr->ChildB == nullptr) {
+			for (Sphere* object : Curr->spheres){
+				// add super ball
+				hit = object->Intersect(ray);
+				if (hit.HasValue())
+				{
+					closestHit = hit;
+					closestHit.object = object;
+					isHit = true;
+				}
+			}
+		}
+		else {
+			if (Curr->ChildA && Curr->ChildA->bounds.BoxIntersection(ray))
+				NodeStack.push(Curr->ChildA);
+			if (Curr->ChildB && Curr->ChildB->bounds.BoxIntersection(ray))
+				NodeStack.push(Curr->ChildB);
+		}
+	}
+	return isHit;
 	}
 };
 
