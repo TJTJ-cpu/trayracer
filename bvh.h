@@ -150,7 +150,7 @@ public:
 	}
 
 	void FindBestSplit(Node* Root, int &SplitAxis, float &SplitPos) {
-		int Iter = 10000;
+		int Iter = 1000;
 		int CurrentBestResult = 2147483647;
 		float Candidate, Length;
 		float BestCadidate = FLT_MAX;
@@ -213,7 +213,7 @@ public:
 	}
 
 	void SplitNode(Node* parent, int depth) {
-		const int MaxDepth = 10;
+		const int MaxDepth = 32;
 
 		if (depth == MaxDepth || !parent->bounds.bHasObject || parent->spheres.size() <= 5) {
 			return;
@@ -356,6 +356,11 @@ public:
 		bool isHit = false;
 		std::stack<Node*> NodeStack;
 		NodeStack.push(this);
+		Node* curr = this;
+
+		// boundingbox
+		// is child
+		// iter
 
 		while (!NodeStack.empty()) {
 			Node* Curr = NodeStack.top();
@@ -363,15 +368,14 @@ public:
 			//std::cout << "Stack Size: " << NodeStack.size() << std::endl;
 			if (Curr->ChildA == nullptr && Curr->ChildB == nullptr) {
 				for (Sphere* object : Curr->spheres) {
-					//	if (!IsInVec(spheres, object))
-					//		spheres.push_back(object);
 					hit = object->Intersect(ray, hit.t);
 					if (hit.HasValue())
 					{
-						//assert(hit.t < closestHit.t);
+						if (hit.t < closestHit.t) {
 						closestHit = hit;
 						closestHit.object = object;
 						isHit = true;
+						}
 					}
 				}
 			}

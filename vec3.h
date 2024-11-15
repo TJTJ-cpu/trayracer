@@ -20,6 +20,8 @@ public:
         //this->UpdateIsZeroVariable();
     }
 
+    explicit vec3(float a) : vec3(a, a, a);
+
     vec3(std::initializer_list<double> const il)
     {
         assert(il.size() == 3);

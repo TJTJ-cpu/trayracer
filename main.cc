@@ -183,10 +183,10 @@ int main(int argc, char* argv[])
 	//std::cout << "Ray Per Pixel: " << RaysPerPixel << std::endl;
 	//std::cout << "Sphere Amount: " << SphereAmount << std::endl;
     /// RENDERING LOOP
-    //while (wnd.IsOpen() && !exit)
     std::chrono::high_resolution_clock::time_point start2; 
     std::chrono::high_resolution_clock::time_point end2; 
-    //for (int i = 1; i < 25; i ++)
+    //for (int i = 1; i < 5; i ++)
+    while (wnd.IsOpen() && !exit)
     {
         resetFramebuffer = false;
         moveDir = {0,0,0};
