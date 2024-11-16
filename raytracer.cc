@@ -27,7 +27,7 @@ Raytracer::~Raytracer() {
 */
 
 void Raytracer::SetUpNode(BoundingBox Box, std::vector<Sphere*> Spheres) {
-    MainNode = new Node(Box, Spheres);
+    MainNode = new NewNode(Box, Spheres);
 }
 
 unsigned int 
@@ -194,7 +194,7 @@ Raytracer::BVHRaycast(Ray ray, vec3& hitPoint, vec3& hitNormal, Object*& hitObje
     //std::queue<Node*> NodeQueue;
     //NodeQueue.push(MainNode);
     //Node a = Node();
-    Node* Curr = MainNode;
+    NewNode* Curr = MainNode;
     while (true) {
         if (Curr->ChildA && Curr->ChildA->bounds.BoxIntersection(ray))
             Curr = Curr->ChildA;

@@ -11,7 +11,7 @@
 #include <stack>
 
 
-class Node;
+class NewNode;
 class BoundingBox;
 
 template<typename T>
@@ -68,23 +68,23 @@ public:
 };
 
 
-class Node 
+class NewNode 
 {
 public:
 	BoundingBox bounds;
 	std::vector<Sphere*> spheres;
-	Node* ChildA = nullptr;
-	Node* ChildB = nullptr;
+	NewNode* ChildA = nullptr;
+	NewNode* ChildB = nullptr;
 
-	Node() {};
+	NewNode() {};
 
-	Node(BoundingBox box, const std::vector<Sphere*> sp)
+	NewNode(BoundingBox box, const std::vector<Sphere*> sp)
 	: bounds(box), spheres(sp) {
 		Build(sp);
 		SplitNode(this, 0);
 	}
 
-	~Node() {
+	~NewNode() {
 		delete ChildA;
 		delete ChildB;
 	}
@@ -225,8 +225,8 @@ public:
 		FindBestSplit(parent, SpiltAxis, SplitPos);
 		//NormalSplit(parent, SpiltAxis, SplitPos);
 		//FindNoOverlapSplit(parent, SpiltAxis, SplitPos);
-		parent->ChildA = new Node();
-		parent->ChildB = new Node();
+		parent->ChildA = new NewNode();
+		parent->ChildB = new NewNode();
 		//std::cout << std::endl;
 		//std::cout << "SpiltAxis: " << SpiltAxis << std::endl;
 		//std::cout << "SplitPos: " << SplitPos << std::endl;
@@ -334,10 +334,10 @@ public:
 	void LevelOrderTraversal() {
 		if (!this)
 			return;
-		std::queue<Node*> Queue;
+		std::queue<NewNode*> Queue;
 		Queue.push(this);
 		while (!Queue.empty()) {
-			Node* CurrNode = Queue.front();
+			NewNode* CurrNode = Queue.front();
 			vec3 size = CurrNode->bounds.Size();
 			std::cout << std::endl;
 			std::cout << "Spheres count: " << CurrNode->spheres.size() << std::endl;
@@ -354,16 +354,16 @@ public:
 	bool RaySphereTest(Ray& ray, HitResult& closestHit) {
 		HitResult hit;
 		bool isHit = false;
-		std::stack<Node*> NodeStack;
+		std::stack<NewNode*> NodeStack;
 		NodeStack.push(this);
-		Node* curr = this;
+		NewNode* curr = this;
 
 		// boundingbox
 		// is child
 		// iter
 
 		while (!NodeStack.empty()) {
-			Node* Curr = NodeStack.top();
+			NewNode* Curr = NodeStack.top();
 			NodeStack.pop();
 			//std::cout << "Stack Size: " << NodeStack.size() << std::endl;
 			if (Curr->ChildA == nullptr && Curr->ChildB == nullptr) {

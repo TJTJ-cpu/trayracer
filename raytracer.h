@@ -18,7 +18,7 @@ public:
     Raytracer(unsigned w, unsigned h, std::vector<Color>& frameBuffer, unsigned rpp, unsigned bounces);
     ~Raytracer();
 
-    Node *MainNode;
+    NewNode *MainNode;
     ThreadPool Pool;
     std::atomic<int> PixelCounter;
     int MaxPixel;

@@ -50,4 +50,3 @@ RandomFloatNTP()
     } r;
     r.i = FastRandom() & 0x007fffff | 0x40000000;
     return r.f - 3.0f;
-}
