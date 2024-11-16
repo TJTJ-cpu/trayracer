@@ -27,7 +27,7 @@ Raytracer::~Raytracer() {
 */
 
 void Raytracer::SetUpNode(BoundingBox Box, std::vector<Sphere*> Spheres) {
-    MainNode = new NewNode(Box, Spheres);
+    MainNode = new Node(Box, Spheres);
 }
 
 unsigned int 
@@ -183,28 +183,30 @@ Raytracer::BVHRaycast(Ray ray, vec3& hitPoint, vec3& hitNormal, Object*& hitObje
 
     bool isHit = false;
     HitResult closestHit;
+    std::stack<Node*> StackNode;
+    StackNode.push(this->MainNode);
     //int numHits = 0;
     //HitResult hit;
+    Node* curr;
+    while (!StackNode.empty()) {
+        curr = StackNode.top();
+        StackNode.pop();
+            
+        // CONTINUE IF IT DIDN'T HIT THE BOUNDING BOX
+        if (!curr->bounds.BoxIntersection(ray))
+            continue;
 
-    // if (MainNode->bounds.BoxIntersection(ray)){
-    // }
-    HitResult hit;
-    //std::vector<HitResult> HitVec;
-    //MainNode->BVHIntersect(this->MainNode, ray, Spheres);
-    //std::queue<Node*> NodeQueue;
-    //NodeQueue.push(MainNode);
-    //Node a = Node();
-    NewNode* Curr = MainNode;
-    while (true) {
-        if (Curr->ChildA && Curr->ChildA->bounds.BoxIntersection(ray))
-            Curr = Curr->ChildA;
-        else if (Curr->ChildB && Curr->ChildB->bounds.BoxIntersection(ray))
-            Curr = Curr->ChildB;
-        else
-            break;
+        // ITERATE THROUGHT THE LEAF NODE
+        if (curr->IsLeaf()) {
+            isHit = this->HitTest(curr, closestHit, ray);
+        }
+        // PUSH THE NODE TO THE STACK
+        else {
+            StackNode.push(curr->ChildA);
+            StackNode.push(curr->ChildB);
+        }
+
     }
-
-    isHit = this->MainNode->RaySphereTest(ray, closestHit);
 
     hitPoint = closestHit.p;
     hitNormal = closestHit.normal;
@@ -244,6 +246,25 @@ Raytracer::Raycast(Ray ray, vec3& hitPoint, vec3& hitNormal, Object*& hitObject,
     return isHit;
 }
 
+bool 
+Raytracer::HitTest(Node*& node, HitResult& closestHit, Ray ray) {
+    HitResult hit;
+    bool isHit = false;
+    for (Sphere* sphere : node->spheres)
+    {
+        hit = sphere->Intersect(ray, hit.t);
+        if (hit.HasValue())
+        {
+            //assert(hit.t < closestHit.t);
+            if (hit.t < closestHit.t) {
+                closestHit = hit;
+                closestHit.object = sphere;
+                isHit = true;
+            }
+        }
+    }
+    return isHit;
+}
 
 //------------------------------------------------------------------------------
 /**

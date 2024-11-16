@@ -11,7 +11,7 @@
 #include <stack>
 
 
-class NewNode;
+class Node;
 class BoundingBox;
 
 template<typename T>
@@ -65,26 +65,31 @@ public:
 		return this->Max - this->Min;
 	}
 
+	int GetLargetstAxis() {
+		vec3 size = Size();
+		return size.x > max(size.y, size.z) ? 0 : size.y > size.z ? 1 : 2;
+	}
+
 };
 
 
-class NewNode 
+class Node 
 {
 public:
 	BoundingBox bounds;
 	std::vector<Sphere*> spheres;
-	NewNode* ChildA = nullptr;
-	NewNode* ChildB = nullptr;
+	Node* ChildA = nullptr;
+	Node* ChildB = nullptr;
 
-	NewNode() {};
+	Node() {};
 
-	NewNode(BoundingBox box, const std::vector<Sphere*> sp)
+	Node(BoundingBox box, const std::vector<Sphere*> sp)
 	: bounds(box), spheres(sp) {
 		Build(sp);
 		SplitNode(this, 0);
 	}
 
-	~NewNode() {
+	~Node() {
 		delete ChildA;
 		delete ChildB;
 	}
@@ -99,6 +104,12 @@ public:
 		for (auto sphere : spheres) 
 			bounds.GrowToInclude(sphere);
 		return;
+	}
+
+	bool IsLeaf() {
+		if (!this->ChildA && !this->ChildB)
+			return true;
+		return false;
 	}
 
 	int GetTreeSize(Node* root) {
@@ -213,7 +224,8 @@ public:
 	}
 
 	void SplitNode(Node* parent, int depth) {
-		const int MaxDepth = 32;
+		const int MaxDepth = 0;
+		//std::cout << "Depth: " << MaxDepth << std::endl;
 
 		if (depth == MaxDepth || !parent->bounds.bHasObject || parent->spheres.size() <= 5) {
 			return;
@@ -225,8 +237,8 @@ public:
 		FindBestSplit(parent, SpiltAxis, SplitPos);
 		//NormalSplit(parent, SpiltAxis, SplitPos);
 		//FindNoOverlapSplit(parent, SpiltAxis, SplitPos);
-		parent->ChildA = new NewNode();
-		parent->ChildB = new NewNode();
+		parent->ChildA = new Node();
+		parent->ChildB = new Node();
 		//std::cout << std::endl;
 		//std::cout << "SpiltAxis: " << SpiltAxis << std::endl;
 		//std::cout << "SplitPos: " << SplitPos << std::endl;
@@ -334,10 +346,10 @@ public:
 	void LevelOrderTraversal() {
 		if (!this)
 			return;
-		std::queue<NewNode*> Queue;
+		std::queue<Node*> Queue;
 		Queue.push(this);
 		while (!Queue.empty()) {
-			NewNode* CurrNode = Queue.front();
+			Node* CurrNode = Queue.front();
 			vec3 size = CurrNode->bounds.Size();
 			std::cout << std::endl;
 			std::cout << "Spheres count: " << CurrNode->spheres.size() << std::endl;
@@ -350,44 +362,25 @@ public:
 		}
 	}
 
-	//bool RaySphereTest(Ray& ray, HitResult& closestHit, std::vector<Sphere*> &spheres) {
-	bool RaySphereTest(Ray& ray, HitResult& closestHit) {
+	bool HitTest(Node*& node, HitResult &closestHit, Ray ray) {
 		HitResult hit;
 		bool isHit = false;
-		std::stack<NewNode*> NodeStack;
-		NodeStack.push(this);
-		NewNode* curr = this;
-
-		// boundingbox
-		// is child
-		// iter
-
-		while (!NodeStack.empty()) {
-			NewNode* Curr = NodeStack.top();
-			NodeStack.pop();
-			//std::cout << "Stack Size: " << NodeStack.size() << std::endl;
-			if (Curr->ChildA == nullptr && Curr->ChildB == nullptr) {
-				for (Sphere* object : Curr->spheres) {
-					hit = object->Intersect(ray, hit.t);
-					if (hit.HasValue())
-					{
-						if (hit.t < closestHit.t) {
-						closestHit = hit;
-						closestHit.object = object;
-						isHit = true;
-						}
-					}
+		for (Sphere* sphere : node->spheres)
+		{
+			hit = sphere->Intersect(ray, hit.t);
+			if (hit.HasValue())
+			{
+				//assert(hit.t < closestHit.t);
+				if (hit.t < closestHit.t) {
+					closestHit = hit;
+					closestHit.object = sphere;
+					isHit = true;
 				}
-			}
-			else {
-				if (Curr->ChildA && Curr->ChildA->bounds.BoxIntersection(ray))
-					NodeStack.push(Curr->ChildA);
-				if (Curr->ChildB && Curr->ChildB->bounds.BoxIntersection(ray))
-					NodeStack.push(Curr->ChildB);
 			}
 		}
 		return isHit;
 	}
+
 };
 
 

@@ -16,10 +16,10 @@
 
 int main(int argc, char* argv[])
 { 
-    unsigned w = 1000;
-    unsigned h = 1000;
+    unsigned w = 300;
+    unsigned h = 300;
     int rpp = 2;
-    int ball = 64;
+    int ball = 65;
     int mb = 5;
     for (int i = 0; i < argc; i++) {
         if (strcmp(argv[i], "-w") == 0) {
@@ -48,6 +48,8 @@ int main(int argc, char* argv[])
     const int RaysPerPixel = rpp;
     const int SphereAmount = ball;
     const int maxBounces = mb;
+    double TotalFrameDuration = 0;
+    unsigned int TotalFrame = 0;
     Display::Window wnd;
     wnd.SetTitle("TrayRacer");
     
@@ -166,13 +168,16 @@ int main(int argc, char* argv[])
 
     std::vector<std::thread> Threads;
     /// SET UP BVH
-	//auto start = std::chrono::high_resolution_clock::now();
+	auto start = std::chrono::high_resolution_clock::now();
+
     BoundingBox Box;
     rt.SetUpNode(Box, Spheres);
-	//auto end = std::chrono::high_resolution_clock::now();
-	//std::chrono::duration<float> frameDuration = end - start;
-	//double DoubleFrameDuration = frameDuration.count();
-    //std::cout << "Time to create BVH: " << DoubleFrameDuration << std::endl;
+
+	auto end = std::chrono::high_resolution_clock::now();
+	std::chrono::duration<float> frameDuration = end - start;
+	double DoubleFrameDuration = frameDuration.count();
+	 std::cout << "------------------------------" << std::endl;
+    std::cout << "Time to create BVH: " << DoubleFrameDuration << std::endl;
 
     //rt.MainNode->LevelOrderTraversal();
 
@@ -185,8 +190,8 @@ int main(int argc, char* argv[])
     /// RENDERING LOOP
     std::chrono::high_resolution_clock::time_point start2; 
     std::chrono::high_resolution_clock::time_point end2; 
-    //for (int i = 1; i < 5; i ++)
-    while (wnd.IsOpen() && !exit)
+    // while (wnd.IsOpen() && !exit)
+    for (int i = 1; i < 6; i ++)
     {
         resetFramebuffer = false;
         moveDir = {0,0,0};
@@ -228,6 +233,8 @@ int main(int argc, char* argv[])
         //end2 = std::chrono::high_resolution_clock::now();
         std::chrono::duration<float> frameDuration = end - start;
         double DoubleFrameDuration = frameDuration.count();
+        TotalFrameDuration += DoubleFrameDuration;
+        TotalFrame++;
 
   //      std::cout << "Number of Cores: " << i;
 		//end2 = std::chrono::high_resolution_clock::now();
@@ -235,14 +242,15 @@ int main(int argc, char* argv[])
 		//std::cout << " - Duration: " << frameDuration2.count() << " sec" << std::endl;
 
         // Printing Info
-		 std::cout << "------------------------------" << std::endl;
 		 std::cout << "Width: " << width << std::endl;
 		 std::cout << "Height: " << height << std::endl;
 		 std::cout << "Ray Per Pixel: " << RaysPerPixel << std::endl;
 		 std::cout << "Sphere Amount: " << SphereAmount << std::endl;
-         std::cout << "Duration: " << frameDuration.count() << " sec" << std::endl;
+		 std::cout << "     --------------------" << std::endl;
+         //std::cout << "Duration: " << frameDuration.count() << " sec" << std::endl;
          std::cout << "Total Number of Rays: " << RayNum << std::endl;
          std::cout << "Total Rays: " << (RayNum / 1'000'000)/DoubleFrameDuration << " MRays/s" << std::endl;
+         std::cout << "Average " << i << " Frames Duration: " << TotalFrameDuration / TotalFrame << std::endl;
 		 std::cout << "------------------------------" << std::endl;
 
         frameIndex++;

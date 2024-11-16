@@ -1,4 +1,7 @@
 #pragma once
+#include <cfloat>
+#include <cstddef>
+#include <ios>
 #include <vector>
 #include <numeric>
 
@@ -62,7 +65,26 @@ struct BuildConfig {
 	float TraversalCost;
 
 };
-
-
 static constexpr BuildConfig build_config = { 2,8,1.0f };
+
+struct Bin{
+    BBox bbox = BBox::Empty();
+    size_t SphereCount = 0;
+
+    Bin& extend(const Bin &other){
+        bbox.Extend(other. bbox);
+        SphereCount += other.SphereCount;
+        return *this;
+    }
+
+    float cost()  {
+        return bbox.HalfArea() * SphereCount;
+    }
+};
+static constexpr size_t bin_count = 16;
+
+static size_t bin_index(int axis, const BBox& bbox, const vec3& center) {
+    int index = (center[axis] - bbox.Min[axis]) * (bin_count / (bbox.Max[axis] - bbox.Min[axis]));
+    return std::min(bin_count - 1, static_cast<size_t>(std::max(0, index)));
+}
 

@@ -8,6 +8,8 @@
 class vec3
 {
 public:
+    explicit vec3(float a) : vec3(a, a, a) {};
+
     vec3() : x(0), y(0), z(0)
     {
         //this->UpdateIsNormalizedVariable();
@@ -20,7 +22,6 @@ public:
         //this->UpdateIsZeroVariable();
     }
 
-    explicit vec3(float a) : vec3(a, a, a);
 
     vec3(std::initializer_list<double> const il)
     {
@@ -34,10 +35,8 @@ public:
             *d = v;
             i++;
         }
-
-        //this->UpdateIsNormalizedVariable();
-        //this->UpdateIsZeroVariable();
     }
+
 
     ~vec3()
     {
