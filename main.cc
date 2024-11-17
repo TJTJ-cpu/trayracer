@@ -16,8 +16,8 @@
 
 int main(int argc, char* argv[])
 { 
-    unsigned w = 300;
-    unsigned h = 300;
+    unsigned w = 1000;
+    unsigned h = 1000;
     int rpp = 2;
     int ball = 65;
     int mb = 5;
@@ -190,8 +190,8 @@ int main(int argc, char* argv[])
     /// RENDERING LOOP
     std::chrono::high_resolution_clock::time_point start2; 
     std::chrono::high_resolution_clock::time_point end2; 
-    // while (wnd.IsOpen() && !exit)
-    for (int i = 1; i < 6; i ++)
+    //for (int i = 1; i < 6; i ++)
+     while (wnd.IsOpen() && !exit)
     {
         resetFramebuffer = false;
         moveDir = {0,0,0};
@@ -246,11 +246,12 @@ int main(int argc, char* argv[])
 		 std::cout << "Height: " << height << std::endl;
 		 std::cout << "Ray Per Pixel: " << RaysPerPixel << std::endl;
 		 std::cout << "Sphere Amount: " << SphereAmount << std::endl;
-		 std::cout << "     --------------------" << std::endl;
-         //std::cout << "Duration: " << frameDuration.count() << " sec" << std::endl;
+		 //std::cout << "     --------------------" << std::endl;
+         std::cout << "Duration: " << frameDuration.count() << " sec" << std::endl;
+         std::cout << "FPS: " << (1.0 / frameDuration.count()) << std::endl;
          std::cout << "Total Number of Rays: " << RayNum << std::endl;
          std::cout << "Total Rays: " << (RayNum / 1'000'000)/DoubleFrameDuration << " MRays/s" << std::endl;
-         std::cout << "Average " << i << " Frames Duration: " << TotalFrameDuration / TotalFrame << std::endl;
+         //std::cout << "Average " << i << " Frames Duration: " << TotalFrameDuration / TotalFrame << std::endl;
 		 std::cout << "------------------------------" << std::endl;
 
         frameIndex++;

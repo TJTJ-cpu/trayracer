@@ -40,7 +40,7 @@ public:
     // add object to scene
     void AddObject(Sphere* obj);
 
-    bool HitTest(Node*& node, HitResult& closestHit, Ray ray);
+    void HitTest(Node*& node, HitResult& closestHit, Ray ray);
 
     // single raycast, find object
     //static bool Raycast(Ray ray, vec3& hitPoint, vec3& hitNormal, Object*& hitObject, float& distance, std::vector<Object*> objects);

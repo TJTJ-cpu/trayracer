@@ -224,7 +224,7 @@ public:
 	}
 
 	void SplitNode(Node* parent, int depth) {
-		const int MaxDepth = 0;
+		const int MaxDepth = 2;
 		//std::cout << "Depth: " << MaxDepth << std::endl;
 
 		if (depth == MaxDepth || !parent->bounds.bHasObject || parent->spheres.size() <= 5) {
@@ -316,7 +316,7 @@ public:
 
     bool bInA(Sphere* sp, int axis, float Spos){
 		//std::cout << "bInA: " << (sp->center[axis] - sp->radius) << " < " << Spos << " && " << (sp->center[axis] + sp->radius) << " < " << Spos << " => Condition: " << ((sp->center[axis] - sp->radius < Spos && sp->center[axis] + sp->radius < Spos) ? "true" : "false") << std::endl;
-        if (sp->center[axis] - sp->radius <= Spos && sp->center[axis] + sp->radius <= Spos)
+        if (sp->center[axis] - sp->radius < Spos && sp->center[axis] + sp->radius < Spos)
             return true;
         return false;
         
@@ -362,24 +362,24 @@ public:
 		}
 	}
 
-	bool HitTest(Node*& node, HitResult &closestHit, Ray ray) {
-		HitResult hit;
-		bool isHit = false;
-		for (Sphere* sphere : node->spheres)
-		{
-			hit = sphere->Intersect(ray, hit.t);
-			if (hit.HasValue())
-			{
-				//assert(hit.t < closestHit.t);
-				if (hit.t < closestHit.t) {
-					closestHit = hit;
-					closestHit.object = sphere;
-					isHit = true;
-				}
-			}
-		}
-		return isHit;
-	}
+	//bool HitTest(Node*& node, HitResult &closestHit, Ray ray) {
+	//	HitResult hit;
+	//	bool isHit = false;
+	//	for (Sphere* sphere : node->spheres)
+	//	{
+	//		hit = sphere->Intersect(ray, hit.t);
+	//		if (hit.HasValue())
+	//		{
+	//			//assert(hit.t < closestHit.t);
+	//			if (hit.t < closestHit.t) {
+	//				closestHit = hit;
+	//				closestHit.object = sphere;
+	//				isHit = true;
+	//			}
+	//		}
+	//	}
+	//	return isHit;
+	//}
 
 };
 

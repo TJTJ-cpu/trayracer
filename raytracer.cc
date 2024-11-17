@@ -180,25 +180,32 @@ bool
 Raytracer::BVHRaycast(Ray ray, vec3& hitPoint, vec3& hitNormal, Object*& hitObject, 
     float& distance, std::vector<Sphere*> const &world)
 {
-
-    bool isHit = false;
     HitResult closestHit;
     std::stack<Node*> StackNode;
     StackNode.push(this->MainNode);
+    int count = this->MainNode->spheres.size();
     //int numHits = 0;
     //HitResult hit;
     Node* curr;
     while (!StackNode.empty()) {
         curr = StackNode.top();
         StackNode.pop();
+
+   //     std::cout << "Curr Node Size: " << curr->spheres.size() << std::endl;
+   //     if (curr->ChildA)
+			//std::cout << "Child A Size: " << curr->ChildA->spheres.size() << std::endl;
+   //     if (curr->ChildB)
+			//std::cout << "Child B Size: " << curr->ChildB->spheres.size() << std::endl;
+   //     std::cout << std::endl;
             
         // CONTINUE IF IT DIDN'T HIT THE BOUNDING BOX
-        if (!curr->bounds.BoxIntersection(ray))
-            continue;
+        //if (!curr->bounds.BoxIntersection(ray))
+        //    continue;
 
         // ITERATE THROUGHT THE LEAF NODE
         if (curr->IsLeaf()) {
-            isHit = this->HitTest(curr, closestHit, ray);
+            //isHit = this->MainNode->HitTest(curr, closestHit, ray);
+            this->HitTest(curr, closestHit, ray);
         }
         // PUSH THE NODE TO THE STACK
         else {
@@ -213,7 +220,30 @@ Raytracer::BVHRaycast(Ray ray, vec3& hitPoint, vec3& hitNormal, Object*& hitObje
     hitObject = closestHit.object;
     distance = closestHit.t;
     
-    return isHit;
+    if (closestHit.object)
+        return true;
+    return false;
+}
+
+
+void 
+Raytracer::HitTest(Node*& node, HitResult& closestHit, Ray ray) {
+    HitResult hit;
+    bool isHit = false;
+    //std::cout << "Spheres Test Count: " << node->spheres.size() << std::endl;
+    for (Sphere* sphere : node->spheres)
+    {
+        hit = sphere->Intersect(ray, hit.t);
+        if (hit.HasValue())
+        {
+            //assert(hit.t < closestHit.t);
+            if (hit.t < closestHit.t) {
+                closestHit = hit;
+                closestHit.object = sphere;
+                isHit = true;
+            }
+        }
+    }
 }
 
 bool
@@ -245,27 +275,6 @@ Raytracer::Raycast(Ray ray, vec3& hitPoint, vec3& hitNormal, Object*& hitObject,
     
     return isHit;
 }
-
-bool 
-Raytracer::HitTest(Node*& node, HitResult& closestHit, Ray ray) {
-    HitResult hit;
-    bool isHit = false;
-    for (Sphere* sphere : node->spheres)
-    {
-        hit = sphere->Intersect(ray, hit.t);
-        if (hit.HasValue())
-        {
-            //assert(hit.t < closestHit.t);
-            if (hit.t < closestHit.t) {
-                closestHit = hit;
-                closestHit.object = sphere;
-                isHit = true;
-            }
-        }
-    }
-    return isHit;
-}
-
 //------------------------------------------------------------------------------
 /**
 */
