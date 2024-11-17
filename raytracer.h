@@ -1,12 +1,14 @@
 #pragma once
 #include <vector>
+#include <float.h>
+#include <queue>
+#include <condition_variable>
+
 #include "vec3.h"
 #include "mat4.h"
 #include "color.h"
 #include "ray.h"
 #include "object.h"
-#include <float.h>
-#include "threadPool.h"
 #include "bvh.h"
 
 //------------------------------------------------------------------------------
@@ -18,21 +20,36 @@ public:
     Raytracer(unsigned w, unsigned h, std::vector<Color>& frameBuffer, unsigned rpp, unsigned bounces);
     ~Raytracer();
 
-    Node *MainNode;
-    ThreadPool Pool;
+    // MULTI THREADING
+	std::vector<std::thread> Threads;
+	std::atomic<int> AvailableThreads;
+	std::atomic<int> CurrentThread;
     std::atomic<int> PixelCounter;
+	std::condition_variable Mutex;
+    std::queue<vec2> ChunkInfo;
+	std::mutex QueueMutex;
+    void ThreadLoop();
+
+    Node *MainNode;
     int MaxPixel;
     int RayNum = 0;
+	bool bShouldTerminate = false;
 
-    unsigned AssignJob();
-
+    // SETUP
     void SetUpNode(BoundingBox Box, std::vector<Sphere*> Spheres);
+    void SpawnThread();
 
+    // MULTI THREADING METHOD
+    unsigned AssignJob();
+    void QueueChunk(vec2 Chunk);
+    void RayTraceChunk(vec2 chunk);
+    void Stop();
+
+    // RAYTRACING
     Color GetColor(float u, float v, int x, int y);
+    Color GetColor2(int x, int y);
+    void AssignColor(Color &color, int x, int y);
 
-    void AssignColor(Color color, int x, int y);
-
-    // start raytracing!
     unsigned int Raytrace();
 
     std::pair<int, int> indexToXY(size_t index) const;
@@ -48,7 +65,7 @@ public:
     bool Raycast(Ray ray, vec3& hitPoint, vec3& hitNormal, Object*& hitObject, 
                  float& distance, std::vector<Sphere*> const &objects);
 
-    bool BVHRaycast(Ray ray, vec3& hitPoint, vec3& hitNormal, Object*& hitObject, 
+    bool BVHRaycast(Ray &ray, vec3& hitPoint, vec3& hitNormal, Object*& hitObject, 
                     float& distance, std::vector<Sphere*> const &objects);
 
     // set camera matrix
@@ -62,7 +79,7 @@ public:
 
     // trace a path and return intersection color
     // n is bounce depth
-    Color TracePath(Ray ray, unsigned n);
+    Color TracePath(Ray &ray, unsigned n);
 
     // get the color of the skybox in a direction
     Color Skybox(vec3 direction);
@@ -73,6 +90,7 @@ public:
     unsigned rpp;
     // max number of bounces before termination
     unsigned bounces = 5;
+
 
     // width of framebuffer
     const unsigned width;

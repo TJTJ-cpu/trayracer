@@ -191,3 +191,17 @@ inline vec3 cross(vec3 a, vec3 b)
              a.z * b.x - a.x * b.z,
              a.x * b.y - a.y * b.x, };
 }
+
+class vec2 {
+public:
+    explicit vec2(float a) : vec2(a, a) {};
+    float x, y;
+
+    vec2(float a, float b) : x(a), y(b){}
+    vec2(){}
+
+};
+
+inline float min(const float& a, const float& b) {
+    return (a <= b) ? a : b;
+}
