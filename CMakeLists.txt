@@ -52,8 +52,6 @@ SET(files
 		stb_image_write.h
 		bvh.h
 		threadPool.h
-		newBVH.h
-		NodeBox.h
 		threadPool.cc
 	)
 SOURCE_GROUP("trayracer" FILES ${files})
