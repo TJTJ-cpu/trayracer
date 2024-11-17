@@ -51,8 +51,6 @@ SET(files
 		material.cc
 		stb_image_write.h
 		bvh.h
-		threadPool.h
-		threadPool.cc
 	)
 SOURCE_GROUP("trayracer" FILES ${files})
 

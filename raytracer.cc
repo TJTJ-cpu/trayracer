@@ -291,7 +291,7 @@ void Raytracer::RayTraceChunk(vec2 Chunk) {
 
     for (int y = MinY; y < MaxY; y++) {
         for (int x = 0; x < this->width;x++) {
-			std::cout << "x: " << x << ", y: "<< y << std::endl;
+			//std::cout << "x: " << x << ", y: "<< y << std::endl;
             Color color;
             for (int i = 0; i < this->rpp; i++) {
                 /// !!! CHECK WHICH IS BETTER LATER !!!
