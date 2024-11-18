@@ -16,10 +16,10 @@
 
 int main(int argc, char* argv[])
 { 
-    unsigned w = 1000;
-    unsigned h = 1000;
-    int rpp = 10;
-    int ball = 258;
+    unsigned w = 500;
+    unsigned h = 500;
+    int rpp = 1;
+    int ball = 64;
     int mb = 5;
     for (int i = 0; i < argc; i++) {
         if (strcmp(argv[i], "-w") == 0) {
@@ -174,10 +174,10 @@ int main(int argc, char* argv[])
     rt.SetUpNode(Box, Spheres);
 
 	auto end = std::chrono::high_resolution_clock::now();
-	std::chrono::duration<float> frameDuration = end - start;
-	double DoubleFrameDuration = frameDuration.count();
-	 std::cout << "------------------------------" << std::endl;
-    std::cout << "Time to create BVH: " << DoubleFrameDuration << std::endl;
+	//std::chrono::duration<float> frameDuration = end - start;
+	//double DoubleFrameDuration = frameDuration.count();
+	 //std::cout << "------------------------------" << std::endl;
+  //  std::cout << "Time to create BVH: " << DoubleFrameDuration << std::endl;
 
     //rt.MainNode->LevelOrderTraversal();
 
@@ -191,7 +191,7 @@ int main(int argc, char* argv[])
     std::chrono::high_resolution_clock::time_point start2; 
     std::chrono::high_resolution_clock::time_point end2; 
     //for (int i = 1; i < 6; i ++)
-      //while (wnd.IsOpen() && !exit)
+      while (wnd.IsOpen() && !exit)
     {
         resetFramebuffer = false;
         moveDir = {0,0,0};
@@ -226,7 +226,6 @@ int main(int argc, char* argv[])
         double RayNum;
 		auto start = std::chrono::high_resolution_clock::now();
         //start2 = std::chrono::high_resolution_clock::now();
-        // Original
 		//RayNum = rt.Raytrace();
         RayNum = rt.AssignJob();
 		auto end = std::chrono::high_resolution_clock::now();
@@ -236,26 +235,7 @@ int main(int argc, char* argv[])
         TotalFrameDuration += DoubleFrameDuration;
         TotalFrame++;
 
-  //      std::cout << "Number of Cores: " << i;
-		//end2 = std::chrono::high_resolution_clock::now();
-		//std::chrono::duration<float> frameDuration2 = end2 - start2;
-		//std::cout << " - Duration: " << frameDuration2.count() << " sec" << std::endl;
-
-        // Printing Info
-		 std::cout << "Width: " << width << std::endl;
-		 std::cout << "Height: " << height << std::endl;
-		 std::cout << "Ray Per Pixel: " << RaysPerPixel << std::endl;
-		 std::cout << "Sphere Amount: " << SphereAmount << std::endl;
-		 //std::cout << "     --------------------" << std::endl;
-         std::cout << "Duration: " << frameDuration.count() << " sec" << std::endl;
-         std::cout << "FPS: " << (1.0 / frameDuration.count()) << std::endl;
-         std::cout << "Total Number of Rays: " << RayNum << std::endl;
-         std::cout << "Total Rays: " << (RayNum / 1'000'000)/DoubleFrameDuration << " MRays/s" << std::endl;
-         //std::cout << "Average " << i << " Frames Duration: " << TotalFrameDuration / TotalFrame << std::endl;
-		 std::cout << "------------------------------" << std::endl;
-
-        frameIndex++;
-
+        frameIndex++; 
         // Get the average distribution of all samples
 		std::vector<uint8_t> ImageData;
         {
@@ -266,14 +246,32 @@ int main(int argc, char* argv[])
                 framebufferCopy[p].r /= frameIndex;
                 framebufferCopy[p].g /= frameIndex;
                 framebufferCopy[p].b /= frameIndex;
-                ImageData.push_back(255 * framebufferCopy[p].r);
-                ImageData.push_back(255 * framebufferCopy[p].g);
-                ImageData.push_back(255 * framebufferCopy[p].b);
+                //ImageData.push_back(255 * framebufferCopy[p].r);
+                //ImageData.push_back(255 * framebufferCopy[p].g);
+                //ImageData.push_back(255 * framebufferCopy[p].b);
                 p++;
             }
         }
-        stbi_flip_vertically_on_write(1);
-		stbi_write_png("Frame.png", width, height, 3, ImageData.data(), width * 3);
+
+  //      std::cout << "Number of Cores: " << i;
+		//end2 = std::chrono::high_resolution_clock::now();
+		//std::chrono::duration<float> frameDuration2 = end2 - start2;
+		//std::cout << " - Duration: " << frameDuration2.count() << " sec" << std::endl;
+
+        // Printing Info
+		 //std::cout << "Width: " << width << std::endl;
+		 //std::cout << "Height: " << height << std::endl;
+		 //std::cout << "Ray Per Pixel: " << RaysPerPixel << std::endl;
+		 //std::cout << "Sphere Amount: " << SphereAmount << std::endl;
+   //      std::cout << "Duration: " << frameDuration.count() << " sec" << std::endl;
+   //      std::cout << "FPS: " << (1.0 / frameDuration.count()) << std::endl;
+   //      std::cout << "Total Number of Rays: " << RayNum << std::endl;
+   //      std::cout << "Total Rays: " << (RayNum / 1'000'000)/DoubleFrameDuration << " MRays/s" << std::endl;
+   //      //std::cout << "Average " << i << " Frames Duration: " << TotalFrameDuration / TotalFrame << std::endl;
+		 //std::cout << "------------------------------" << std::endl;
+
+  //      stbi_flip_vertically_on_write(1);
+		//stbi_write_png("Frame.png", width, height, 3, ImageData.data(), width * 3);
 
         glClearColor(0, 0, 0, 1.0);
         glClear( GL_COLOR_BUFFER_BIT );

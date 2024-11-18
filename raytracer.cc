@@ -33,13 +33,10 @@ void Raytracer::SetUpNode(BoundingBox Box, std::vector<Sphere*> Spheres) {
 unsigned int 
 Raytracer::AssignJob()
 {
-    // Max Pixels
-    int Cores = std::thread::hardware_concurrency();
-	 // Cores = 1;
-
     // ThreadPool
+    JobsCompleted.store(0);
     /// FIND THE OPTIMAL NUMBER LATER
-    const int NumChunk = 10;
+    int NumChunk = height / 10;
     int ChunkSize = (height + NumChunk - 1) / NumChunk;
     // ROUND UP CHUNK
     int totalChunk = (height + ChunkSize - 1) / ChunkSize;
@@ -60,44 +57,8 @@ Raytracer::AssignJob()
 
 
     //std::cout << "Cur thread: " << JobsCompleted;
-    //std::cout << ", NumChunk: " << NumChunk << std::endl;
+    //std::cout << ", NumChunk: " << NumChunk << std::endl
     return RayNum;
-
-
-     //Spawn  threads
-    //PixelCounter = 0;
-    //size_t MaxPixel = width * height;
-    //MaxPixel = this->height * this->width;
-  //  for (int i = 0; i < Cores; i++) {
-  //      Threads.emplace_back([&]() {
-  //          while (true) {
-  //              size_t index = PixelCounter.fetch_add(1);
-
-  //              // Base Case
-  //              if (index >= MaxPixel)
-  //                  break;
-
-  //              auto [x, y] = indexToXY(index);
-		//		float u = ((float(x) + RandomFloat()) * (1.0f / width)) * 2.0f - 1.0f;
-		//		float v = ((float(y) + RandomFloat()) * (1.0f / height)) * 2.0f - 1.0f;
-  //              
-  //              Color color;
-
-  //              for (int z = 0; z < rpp; z++) {
-  //                  color += GetColor(u, v, x, y);
-  //                  RayNum++;
-  //              }
-
-  //              AssignColor(color, x, y);
-  //          }
-		//});
-  //  }
-
-  //  for (auto& thread : Threads) {
-  //      thread.join();
-  //  }
-
-    //return RayNum;
 }
 
 Color 
@@ -263,7 +224,6 @@ Raytracer::BVHRaycast(Ray &ray, vec3& hitPoint, vec3& hitNormal, Object*& hitObj
 void 
 Raytracer::HitTest(Node*& node, HitResult& closestHit, Ray ray) {
     HitResult hit;
-    bool isHit = false;
     //std::cout << "Spheres Test Count: " << node->spheres.size() << std::endl;
     for (Sphere* sphere : node->spheres)
     {
@@ -274,7 +234,6 @@ Raytracer::HitTest(Node*& node, HitResult& closestHit, Ray ray) {
             if (hit.t < closestHit.t) {
                 closestHit = hit;
                 closestHit.object = sphere;
-                isHit = true;
             }
         }
     }
@@ -305,6 +264,7 @@ void Raytracer::RayTraceChunk(vec2 Chunk) {
                 Ray ray = Ray(get_position(this->view), direction);
                 color += this->TracePath(ray, 0);
                 AssignColor(color, x, y);
+                this->RayNum++;
             }
         }
     }
@@ -325,6 +285,7 @@ Raytracer::QueueChunk(vec2 Chunk) {
 void 
 Raytracer::SpawnThread() {
     int Cores = std::thread::hardware_concurrency();
+    // Cores = 1;
     for (int i = 0; i < Cores; i++) {
         Threads.emplace_back(&Raytracer::ThreadLoop, this);
     }
@@ -404,6 +365,7 @@ Raytracer::Clear()
         color.g = 0.0f;
         color.b = 0.0f;
     }
+    this->RayNum = 0;
 }
 
 //------------------------------------------------------------------------------
