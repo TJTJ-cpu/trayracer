@@ -23,7 +23,7 @@ public:
     // MULTI THREADING
 	std::vector<std::thread> Threads;
 	std::atomic<int> AvailableThreads;
-	std::atomic<int> CurrentThread;
+	std::atomic<int> JobsCompleted = 0;
     std::atomic<int> PixelCounter;
 	std::condition_variable Mutex;
     std::queue<vec2> ChunkInfo;

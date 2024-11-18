@@ -35,7 +35,6 @@ Raytracer::AssignJob()
 {
     // Max Pixels
     int Cores = std::thread::hardware_concurrency();
-    CurrentThread.store(0);
 	 // Cores = 1;
 
     // ThreadPool
@@ -52,16 +51,16 @@ Raytracer::AssignJob()
         float mx = min((i + 1) * ChunkSize, height);
         //QueueJob(this, chunk);
         QueueChunk(vec2(my, mx));
-        AvailableThreads.fetch_sub(1);
     }
 
     //while (AvailableThreads > 0)
-    while (CurrentThread > NumChunk)
+    while (JobsCompleted < NumChunk) {
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    }
 
 
-    std::cout << "Cur thread: " << CurrentThread;
-    std::cout << ", NumChunk: " << NumChunk << std::endl;
+    //std::cout << "Cur thread: " << JobsCompleted;
+    //std::cout << ", NumChunk: " << NumChunk << std::endl;
     return RayNum;
 
 
@@ -98,7 +97,7 @@ Raytracer::AssignJob()
   //      thread.join();
   //  }
 
-    return RayNum;
+    //return RayNum;
 }
 
 Color 
@@ -198,7 +197,7 @@ Raytracer::TracePath(Ray &ray, unsigned n)
     Color color;
     float distance = FLT_MAX;
 
-    if (BVHRaycast(ray, hitPoint, hitNormal, hitObject, distance, this->objects))
+    if (Raycast(ray, hitPoint, hitNormal, hitObject, distance, this->objects))
     {
         Ray scatteredRay =  Ray(hitObject->ScatterRay(ray, hitPoint, hitNormal));
         if (n < this->bounces)
@@ -309,7 +308,7 @@ void Raytracer::RayTraceChunk(vec2 Chunk) {
             }
         }
     }
-    CurrentThread.fetch_add(1);
+    JobsCompleted.fetch_add(1);
 }
 
 

@@ -16,10 +16,10 @@
 
 int main(int argc, char* argv[])
 { 
-    unsigned w = 500;
-    unsigned h = 500;
-    int rpp = 2;
-    int ball = 65;
+    unsigned w = 1000;
+    unsigned h = 1000;
+    int rpp = 10;
+    int ball = 258;
     int mb = 5;
     for (int i = 0; i < argc; i++) {
         if (strcmp(argv[i], "-w") == 0) {
@@ -191,7 +191,7 @@ int main(int argc, char* argv[])
     std::chrono::high_resolution_clock::time_point start2; 
     std::chrono::high_resolution_clock::time_point end2; 
     //for (int i = 1; i < 6; i ++)
-     // while (wnd.IsOpen() && !exit)
+      //while (wnd.IsOpen() && !exit)
     {
         resetFramebuffer = false;
         moveDir = {0,0,0};

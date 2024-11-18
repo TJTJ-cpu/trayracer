@@ -161,7 +161,7 @@ public:
 	}
 
 	void FindBestSplit(Node* Root, int &SplitAxis, float &SplitPos) {
-		int Iter = 1000;
+		int Iter = 10000;
 		int CurrentBestResult = 2147483647;
 		float Candidate, Length;
 		float BestCadidate = FLT_MAX;
