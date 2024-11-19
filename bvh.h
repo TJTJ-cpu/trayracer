@@ -70,6 +70,14 @@ public:
 		return size.x > max(size.y, size.z) ? 0 : size.y > size.z ? 1 : 2;
 	}
 
+	float SurfaceArea() {
+		float width = Max.x - Min.x;
+		float height = Max.y - Min.y;
+		float depth = Max.z - Min.z;
+		return 2 * (width * height + width * depth + height * depth);
+	}
+
+
 };
 
 
@@ -180,34 +188,61 @@ public:
 			}
 		}
 		//BVHTEST(Root, SplitAxis, SplitPos);
+	}	
+	
+	void NormalSplit(Node* Root, int &SplitAxis, float &SplitPos) {
+		vec3 size = Root->bounds.Size();
+		SplitAxis = size.x > max(size.y, size.z) ? 0 : size.y > size.z ? 1 : 2;
+		SplitPos = Root->bounds.Center[SplitAxis];
 	}
 
-	int EvaluateSplit(Node* RootAxis, int Axis, float Pos) {
-		int MaxSpheres = RootAxis->spheres.size();
-		int IdealSphere = MaxSpheres / 2;
-		std::vector<Sphere*> Spheres;
-
+	float EvaluateSplit(Node* RootAxis, int Axis, float Pos) {
+		//int MaxSpheres = RootAxis->spheres.size();
+		//int IdealSphere = MaxSpheres / 2;
+		//std::vector<Sphere*> Spheres;
+		Node ASpheres;
+		Node BSpheres;
+		unsigned int OverlappedCount = 0;
 
 		for (auto sphere : RootAxis->spheres) {
-			//if (sphere->center[Axis] <= Pos)
-			//	Spheres.push_back(sphere);
-			//else if (sphere->center[Axis] > Pos)
-			//	Spheres.push_back(sphere);
-
 			if (bInA(sphere, Axis, Pos)) {
-				Spheres.push_back(sphere);
+				ASpheres.AddSphere(sphere);
+			}
+			else if (bInB(sphere, Axis, Pos)) {
+				BSpheres.AddSphere(sphere);
 			}
 			else if (bInAB(sphere, Axis, Pos)) {
-				Spheres.push_back(sphere);
+				ASpheres.AddSphere(sphere);
+				BSpheres.AddSphere(sphere);
+				OverlappedCount++;
+			}
+			else {
+				assert(false && "ERROR :: SPLITFUNCTION :: NO SUBDIVISION");
 			}
 		}
+		float surfaceAreaA = ASpheres.bounds.SurfaceArea();
+		float surfaceAreaB = BSpheres.bounds.SurfaceArea();
+		float surfaceAreaParent = RootAxis->bounds.SurfaceArea();
 
-		int Result = IdealSphere - Spheres.size();
-		return abs(Result);
+		float costA = (surfaceAreaA / surfaceAreaParent) * (ASpheres.spheres.size());
+		float costB = (surfaceAreaB / surfaceAreaParent) * (BSpheres.spheres.size());
+
+		// DISCOURAGE OVERLAPPING * CONSTANT
+		float overlapPenalty = OverlappedCount * 1.5;
+
+		float totalCost = costA + costB + overlapPenalty;
+		return totalCost;
 	}
 
+	/// TO DO
+	/*	
+	func that get volume from vec<sphere>
+
+	*/
+
+
 	void SplitNode(Node* parent, int depth) {
-		const int MaxDepth = 1;
+		const int MaxDepth = 4;
 		//std::cout << "Depth: " << MaxDepth << std::endl;
 
 		if (depth == MaxDepth || !parent->bounds.bHasObject || parent->spheres.size() <= 5) {
@@ -226,13 +261,13 @@ public:
 		//std::cout << "SpiltAxis: " << SpiltAxis << std::endl;
 		//std::cout << "SplitPos: " << SplitPos << std::endl;
 		for (auto sphere : parent->spheres) {
-			//vec3 size;
-			//size = sphere->center;
-			//std::cout << "Sphere Center: ";
+			vec3 size;
+			size = sphere->center;
+			//std::cout << "Sphe/*re Center: ";
 			//std::cout << "x: " << size.x << ", y: " << size.y << ", z: " << size.z << std::endl;
 			//std::cout << "Sphre Rad: " << sphere->radius << std::endl;
 			//std::cout << "SpiltAxis: " << SpiltAxis << std::endl;
-			//std::cout << "SplitPos: " << SplitPos << std::endl;
+			//std::cout << "SplitPos*/: " << SplitPos << std::endl;
 			// Center Split
 			//if (sphere->center[SpiltAxis] <= SplitPos)
 			//	parent->ChildA->AddSphere(sphere);
@@ -265,34 +300,42 @@ public:
 		SplitNode(parent->ChildB, depth + 1);
 	}
 
-	void NormalSplit(Node* Root, int &SplitAxis, float &SplitPos) {
-		vec3 size = Root->bounds.Size();
-		SplitAxis = size.x > max(size.y, size.z) ? 0 : size.y > size.z ? 1 : 2;
-		SplitPos = Root->bounds.Center[SplitAxis];
+	bool bInA(Sphere* sp, int axis, float Spos) {
+		return sp->center[axis] + sp->radius <= Spos;
 	}
 
-    bool bInAB(Sphere* sp, int axis, float Spos){
-		//std::cout << "bInAB: " << (sp->center[axis] - sp->radius) << " < " << Spos << " && " << (sp->center[axis] + sp->radius) << " > " << Spos << " => Condition: " << ((sp->center[axis] - sp->radius < Spos && sp->center[axis] + sp->radius > Spos) ? "true" : "false") << std::endl;
-        if (sp->center[axis] - sp->radius <= Spos && sp->center[axis] + sp->radius >= Spos)
-            return true;
-        return false;
-    }
+	bool bInB(Sphere* sp, int axis, float Spos) {
+		return sp->center[axis] - sp->radius >= Spos;
+	}
 
-    bool bInB(Sphere* sp, int axis, float Spos){
-		//std::cout << "bInB: " << (sp->center[axis] - sp->radius) << " > " << Spos << " && " << (sp->center[axis] + sp->radius) << " > " << Spos << " => Condition: " << ((sp->center[axis] - sp->radius > Spos && sp->center[axis] + sp->radius > Spos) ? "true" : "false") << std::endl;
-        if (sp->center[axis] - sp->radius > Spos && sp->center[axis] + sp->radius > Spos)
-            return true;
-        return false;
-        
-    }
+	bool bInAB(Sphere* sp, int axis, float Spos) {
+		return (sp->center[axis] - sp->radius < Spos) && (sp->center[axis] + sp->radius > Spos);
+	}
 
-    bool bInA(Sphere* sp, int axis, float Spos){
-		//std::cout << "bInA: " << (sp->center[axis] - sp->radius) << " < " << Spos << " && " << (sp->center[axis] + sp->radius) << " < " << Spos << " => Condition: " << ((sp->center[axis] - sp->radius < Spos && sp->center[axis] + sp->radius < Spos) ? "true" : "false") << std::endl;
-        if (sp->center[axis] - sp->radius < Spos && sp->center[axis] + sp->radius < Spos)
-            return true;
-        return false;
-        
-    }
+
+	// old
+  //  bool bInAB(Sphere* sp, int axis, float Spos){
+		////std::cout << "bInAB: " << (sp->center[axis] - sp->radius) << " < " << Spos << " && " << (sp->center[axis] + sp->radius) << " > " << Spos << " => Condition: " << ((sp->center[axis] - sp->radius < Spos && sp->center[axis] + sp->radius > Spos) ? "true" : "false") << std::endl;
+  //      if (sp->center[axis] - sp->radius < Spos && sp->center[axis] + sp->radius > Spos)
+  //          return true;
+  //      return false;
+  //  }
+
+  //  bool bInB(Sphere* sp, int axis, float Spos){
+		////std::cout << "bInB: " << (sp->center[axis] - sp->radius) << " > " << Spos << " && " << (sp->center[axis] + sp->radius) << " > " << Spos << " => Condition: " << ((sp->center[axis] - sp->radius > Spos && sp->center[axis] + sp->radius > Spos) ? "true" : "false") << std::endl;
+  //      if (sp->center[axis] - sp->radius > Spos && sp->center[axis] + sp->radius > Spos)
+  //          return true;
+  //      return false;
+  //      
+  //  }
+
+  //  bool bInA(Sphere* sp, int axis, float Spos){
+		////std::cout << "bInA: " << (sp->center[axis] - sp->radius) << " < " << Spos << " && " << (sp->center[axis] + sp->radius) << " < " << Spos << " => Condition: " << ((sp->center[axis] - sp->radius < Spos && sp->center[axis] + sp->radius < Spos) ? "true" : "false") << std::endl;
+  //      if (sp->center[axis] - sp->radius < Spos && sp->center[axis] + sp->radius < Spos)
+  //          return true;
+  //      return false;
+  //      
+  //  }
 
 	//std::vector<Sphere*>& BVHIntersect(Node* parent, const Ray& ray) {
 	//void BVHIntersect(Node* parent, const Ray& ray, std::vector<Sphere*> &s) {

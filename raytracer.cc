@@ -218,7 +218,7 @@ Raytracer::BVHRaycast(Ray &ray, vec3& hitPoint, vec3& hitNormal, Object*& hitObj
     hitNormal = closestHit.normal;
     hitObject = closestHit.object;
     distance = closestHit.t;
-    std::cout << "Spehre test count: " << test << std::endl;
+    //std::cout << "Spehre test count: " << test << std::endl;
     test = 0;
     
     if (closestHit.object)
@@ -245,7 +245,8 @@ Raytracer::HitTest(Node*& node, HitResult& closestHit, Ray ray) {
         }
     }
 }
-void Raytracer::RayTraceChunk(vec2 Chunk) {
+
+void Raytracer::RayTraceChunk(vec2 &Chunk) {
     size_t MinY = Chunk.x;
     size_t MaxY = Chunk.y;
     //std::cout << "MinY: " << MinY << ", MaxY: " << MaxY << std::endl;
@@ -280,7 +281,7 @@ void Raytracer::RayTraceChunk(vec2 Chunk) {
 
 
 void
-Raytracer::QueueChunk(vec2 Chunk) {
+Raytracer::QueueChunk(vec2& Chunk) {
     {
         std::unique_lock<std::mutex> lock(QueueMutex);
         ChunkInfo.push(Chunk);

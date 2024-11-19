@@ -29,9 +29,9 @@ public:
     std::queue<vec2> ChunkInfo;
 	std::mutex QueueMutex;
     void ThreadLoop();
-    int test = 0;
+    unsigned int test = 0;
 
-    Node *MainNode;
+    Node* MainNode;
     int MaxPixel;
     int RayNum = 0;
 	bool bShouldTerminate = false;
@@ -44,8 +44,8 @@ public:
 
     // MULTI THREADING METHOD
     unsigned AssignJob();
-    void QueueChunk(vec2 Chunk);
-    void RayTraceChunk(vec2 chunk);
+    void QueueChunk(vec2 &Chunk);
+    void RayTraceChunk(vec2 &chunk);
     void Stop();
 
     // RAYTRACING

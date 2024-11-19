@@ -19,7 +19,7 @@ int main(int argc, char* argv[])
     unsigned w = 500;
     unsigned h = 500;
     int rpp = 2;
-    int ball = 256;
+    int ball = 99;
     int mb = 5;
     for (int i = 0; i < argc; i++) {
         if (strcmp(argv[i], "-w") == 0) {
@@ -194,7 +194,7 @@ int main(int argc, char* argv[])
       //while (wnd.IsOpen() && !exit)
     //for (int cores = 1; cores < 101; cores++) {
     //    std::cout << "|Chunk Division: " << cores;
-        for (int i = 1; i < 31; i++)
+        for (int i = 1; i < 5; i++)
         {
             std::cout << "Frame " << i << ": ";
             resetFramebuffer = false;
@@ -231,7 +231,7 @@ int main(int argc, char* argv[])
             auto start = std::chrono::high_resolution_clock::now();
             //start2 = std::chrono::high_resolution_clock::now();
             //RayNum = rt.Raytrace();
-            RayNum = rt.AssignJob();
+            rt.AssignJob();
             auto end = std::chrono::high_resolution_clock::now();
             //end2 = std::chrono::high_resolution_clock::now();
             std::chrono::duration<float> frameDuration = end - start;
@@ -269,8 +269,8 @@ int main(int argc, char* argv[])
                    //std::cout << "Ray Per Pixel: " << RaysPerPixel << std::endl;
                    //std::cout << "Sphere Amount: " << SphereAmount << std::endl;
                    std::cout << "Duration: " << frameDuration.count() << " sec" << std::endl;
-             //      std::cout << "Total Number of Rays: " << RayNum << std::endl;
-             //      std::cout << "Total Rays: " << (RayNum / 1'000'000)/DoubleFrameDuration << " MRays/s" << std::endl;
+                   //std::cout << "Total Number of Rays: " << rt.RayNum << std::endl;
+                   //std::cout << "Total Rays: " << (rt.RayNum / 1'000'000)/DoubleFrameDuration << " MRays/s" << std::endl;
              //      //std::cout << "Average " << i << " Frames Duration: " << TotalFrameDuration / TotalFrame << std::endl;
                    //std::cout << "------------------------------" << std::endl;
 
