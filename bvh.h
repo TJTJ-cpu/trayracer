@@ -206,25 +206,8 @@ public:
 		return abs(Result);
 	}
 
-	void BVHTEST(Node* RootAxis, int Axis, float Pos) {
-		int MaxSpheres = RootAxis->spheres.size();
-		std::vector<Sphere*> Spheres;
-
-		for (auto sphere : RootAxis->spheres) {
-			if (bInA(sphere, Axis, Pos)) {
-				Spheres.push_back(sphere);
-			}
-			else if (bInAB(sphere, Axis, Pos)) {
-				Spheres.push_back(sphere);
-			}
-		}
-		std::cout << "Total Sphere: " << MaxSpheres << std::endl;
-		std::cout << "A Sphere: " << Spheres.size() << std::endl;
-		std::cout << std::endl;
-	}
-
 	void SplitNode(Node* parent, int depth) {
-		const int MaxDepth = 2;
+		const int MaxDepth = 1;
 		//std::cout << "Depth: " << MaxDepth << std::endl;
 
 		if (depth == MaxDepth || !parent->bounds.bHasObject || parent->spheres.size() <= 5) {
@@ -288,17 +271,6 @@ public:
 		SplitPos = Root->bounds.Center[SplitAxis];
 	}
 
-	void PrintBallVec() {
-		int i = 1;
-		vec3 size;
-		for (auto s : this->spheres) {
-			size = s->center;
-			std::cout << "Sphere " << i << "->";
-			std::cout << " x: " << size.x << ", y: " << size.y << ", z: " << size.z << std::endl;
-			i++;
-		}
-	}
-
     bool bInAB(Sphere* sp, int axis, float Spos){
 		//std::cout << "bInAB: " << (sp->center[axis] - sp->radius) << " < " << Spos << " && " << (sp->center[axis] + sp->radius) << " > " << Spos << " => Condition: " << ((sp->center[axis] - sp->radius < Spos && sp->center[axis] + sp->radius > Spos) ? "true" : "false") << std::endl;
         if (sp->center[axis] - sp->radius <= Spos && sp->center[axis] + sp->radius >= Spos)
@@ -323,64 +295,25 @@ public:
     }
 
 	//std::vector<Sphere*>& BVHIntersect(Node* parent, const Ray& ray) {
-	void BVHIntersect(Node* parent, const Ray& ray, std::vector<Sphere*> &s) {
-		if (parent->ChildA == nullptr && parent->ChildB == nullptr) {
-			for (auto sp : parent->spheres)
-				s.push_back(sp);
-			//s.insert(s.end(), parent->spheres.begin(), parent->spheres.end());
-			return;
-		}
-
-		// Check intersection with ChildA's bounding box and recurse if hit
-		if (parent->ChildA && parent->ChildA->bounds.BoxIntersection(ray)) {
-			BVHIntersect(parent->ChildA, ray, s);
-		}
-
-		// Check intersection with ChildB's bounding box and recurse if hit
-		if (parent->ChildB && parent->ChildB->bounds.BoxIntersection(ray)) {
-			BVHIntersect(parent->ChildB, ray, s);
-		}
-
-	}
-
-	void LevelOrderTraversal() {
-		if (!this)
-			return;
-		std::queue<Node*> Queue;
-		Queue.push(this);
-		while (!Queue.empty()) {
-			Node* CurrNode = Queue.front();
-			vec3 size = CurrNode->bounds.Size();
-			std::cout << std::endl;
-			std::cout << "Spheres count: " << CurrNode->spheres.size() << std::endl;
-			std::cout << "Size->  x: " << size.x << ", y: " << size.y << ", z: " << size.z << std::endl;
-			if (CurrNode->ChildA)
-				Queue.push(CurrNode->ChildA);
-			if (CurrNode->ChildB)
-				Queue.push(CurrNode->ChildB);
-			Queue.pop();
-		}
-	}
-
-	//bool HitTest(Node*& node, HitResult &closestHit, Ray ray) {
-	//	HitResult hit;
-	//	bool isHit = false;
-	//	for (Sphere* sphere : node->spheres)
-	//	{
-	//		hit = sphere->Intersect(ray, hit.t);
-	//		if (hit.HasValue())
-	//		{
-	//			//assert(hit.t < closestHit.t);
-	//			if (hit.t < closestHit.t) {
-	//				closestHit = hit;
-	//				closestHit.object = sphere;
-	//				isHit = true;
-	//			}
-	//		}
+	//void BVHIntersect(Node* parent, const Ray& ray, std::vector<Sphere*> &s) {
+	//	if (parent->ChildA == nullptr && parent->ChildB == nullptr) {
+	//		for (auto sp : parent->spheres)
+	//			s.push_back(sp);
+	//		//s.insert(s.end(), parent->spheres.begin(), parent->spheres.end());
+	//		return;
 	//	}
-	//	return isHit;
-	//}
 
+	//	// Check intersection with ChildA's bounding box and recurse if hit
+	//	if (parent->ChildA && parent->ChildA->bounds.BoxIntersection(ray)) {
+	//		BVHIntersect(parent->ChildA, ray, s);
+	//	}
+
+	//	// Check intersection with ChildB's bounding box and recurse if hit
+	//	if (parent->ChildB && parent->ChildB->bounds.BoxIntersection(ray)) {
+	//		BVHIntersect(parent->ChildB, ray, s);
+	//	}
+
+	//}
 };
 
 

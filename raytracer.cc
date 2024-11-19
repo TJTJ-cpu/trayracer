@@ -35,17 +35,24 @@ Raytracer::AssignJob()
 {
     // ThreadPool
     JobsCompleted.store(0);
-    /// FIND THE OPTIMAL NUMBER LATER
-    int NumChunk = height / 10;
-    int ChunkSize = (height + NumChunk - 1) / NumChunk;
+    // OLD
+    //int NumChunk = height / i;
+    //int ChunkSize = (height + NumChunk - 1) / NumChunk;
+    //int totalChunk = (height + ChunkSize - 1) / ChunkSize;
+    //int ChunkSize = (height + NumChunk - 1) / i;
+    /// FIND THE OPTIMAL NUMBER LATER 
+    int NumChunk = 50;
+    int ChunkSize = height / NumChunk;
     // ROUND UP CHUNK
-    int totalChunk = (height + ChunkSize - 1) / ChunkSize;
+    //int totalChunk = (height + ChunkSize - 1) / ChunkSize;
 
-    for (int i = 0; i < totalChunk; i++) {
+    for (int i = 0; i < NumChunk; i++) {
 		// min y
         float my = i * ChunkSize;
 		// max y
-        float mx = min((i + 1) * ChunkSize, height);
+        //float mx = min((i + 1) * ChunkSize, height);
+        // ENSURE THE LAST CHUNK INCLUDE ALL HEIGHT
+        float mx = (i == NumChunk - 1) ? height : (i + 1) * ChunkSize;
         //QueueJob(this, chunk);
         QueueChunk(vec2(my, mx));
     }
@@ -158,7 +165,7 @@ Raytracer::TracePath(Ray &ray, unsigned n)
     Color color;
     float distance = FLT_MAX;
 
-    if (Raycast(ray, hitPoint, hitNormal, hitObject, distance, this->objects))
+    if (BVHRaycast(ray, hitPoint, hitNormal, hitObject, distance, this->objects))
     {
         Ray scatteredRay =  Ray(hitObject->ScatterRay(ray, hitPoint, hitNormal));
         if (n < this->bounces)
@@ -185,7 +192,6 @@ Raytracer::BVHRaycast(Ray &ray, vec3& hitPoint, vec3& hitNormal, Object*& hitObj
     HitResult closestHit;
     std::stack<Node*> StackNode;
     StackNode.push(this->MainNode);
-    int count = this->MainNode->spheres.size();
     //int numHits = 0;
     //HitResult hit;
     Node* curr;
@@ -198,22 +204,22 @@ Raytracer::BVHRaycast(Ray &ray, vec3& hitPoint, vec3& hitNormal, Object*& hitObj
             continue;
 
         // ITERATE THROUGHT THE LEAF NODE
-        if (curr->IsLeaf()) {
-            //isHit = this->MainNode->HitTest(curr, closestHit, ray);
+        if (curr->IsLeaf()) 
             this->HitTest(curr, closestHit, ray);
-        }
+
         // PUSH THE NODE TO THE STACK
         else {
             StackNode.push(curr->ChildA);
             StackNode.push(curr->ChildB);
         }
-
     }
 
     hitPoint = closestHit.p;
     hitNormal = closestHit.normal;
     hitObject = closestHit.object;
     distance = closestHit.t;
+    std::cout << "Spehre test count: " << test << std::endl;
+    test = 0;
     
     if (closestHit.object)
         return true;
@@ -227,6 +233,7 @@ Raytracer::HitTest(Node*& node, HitResult& closestHit, Ray ray) {
     //std::cout << "Spheres Test Count: " << node->spheres.size() << std::endl;
     for (Sphere* sphere : node->spheres)
     {
+        this->test++;
         hit = sphere->Intersect(ray, hit.t);
         if (hit.HasValue())
         {
@@ -285,10 +292,18 @@ Raytracer::QueueChunk(vec2 Chunk) {
 void 
 Raytracer::SpawnThread() {
     int Cores = std::thread::hardware_concurrency();
-    // Cores = 1;
+     Cores  = 1;
     for (int i = 0; i < Cores; i++) {
         Threads.emplace_back(&Raytracer::ThreadLoop, this);
+        ThreadCounts++;
     }
+}
+
+void
+Raytracer::SpawnOneThraed()
+{
+	Threads.emplace_back(&Raytracer::ThreadLoop, this);
+	ThreadCounts++;
 }
 
 void 

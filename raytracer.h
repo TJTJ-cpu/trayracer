@@ -29,15 +29,18 @@ public:
     std::queue<vec2> ChunkInfo;
 	std::mutex QueueMutex;
     void ThreadLoop();
+    int test = 0;
 
     Node *MainNode;
     int MaxPixel;
     int RayNum = 0;
 	bool bShouldTerminate = false;
+    unsigned int ThreadCounts = 0;
 
     // SETUP
     void SetUpNode(BoundingBox Box, std::vector<Sphere*> Spheres);
     void SpawnThread();
+    void SpawnOneThraed();
 
     // MULTI THREADING METHOD
     unsigned AssignJob();
