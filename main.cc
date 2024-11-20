@@ -18,8 +18,8 @@ int main(int argc, char* argv[])
 { 
     unsigned w = 500;
     unsigned h = 500;
-    int rpp = 2;
-    int ball = 99;
+    int rpp = 5;
+    int ball = 500;
     int mb = 5;
     for (int i = 0; i < argc; i++) {
         if (strcmp(argv[i], "-w") == 0) {
@@ -191,12 +191,15 @@ int main(int argc, char* argv[])
     std::chrono::high_resolution_clock::time_point start2; 
     std::chrono::high_resolution_clock::time_point end2; 
     double AvgFrame = 0;
-      //while (wnd.IsOpen() && !exit)
     //for (int cores = 1; cores < 101; cores++) {
     //    std::cout << "|Chunk Division: " << cores;
-        for (int i = 1; i < 5; i++)
+	  //while (wnd.IsOpen() && !exit)
+    std::cout << "Depth: "<< rt.Depth << std::endl;
+    std::cout << "<Frame, Duration(sec)>: " << std::endl;
+        for (int i = 1; i < 31; i++)
         {
-            std::cout << "Frame " << i << ": ";
+            //std::cout << "Frame " << i << ": ";
+            std::cout << "<" << i << ", ";
             resetFramebuffer = false;
             moveDir = { 0,0,0 };
             pitch = 0;
@@ -258,6 +261,10 @@ int main(int argc, char* argv[])
                 }
             }
 
+            // THIS IS BROKEN
+		    //stbi_flip_vertically_on_write(1);
+		    //stbi_write_png("Frame.png", width, height, 3, ImageData.data(), width * 3);
+
             //      std::cout << "Number of Cores: " << i;
                   //end2 = std::chrono::high_resolution_clock::now();
                   //std::chrono::duration<float> frameDuration2 = end2 - start2;
@@ -268,15 +275,14 @@ int main(int argc, char* argv[])
                    //std::cout << "Height: " << height << std::endl;
                    //std::cout << "Ray Per Pixel: " << RaysPerPixel << std::endl;
                    //std::cout << "Sphere Amount: " << SphereAmount << std::endl;
-                   std::cout << "Duration: " << frameDuration.count() << " sec" << std::endl;
+                   //std::cout << "Duration: " << frameDuration.count() << " sec" << std::endl;
+                   std::cout <<  frameDuration.count() << ">, ";
                    //std::cout << "Total Number of Rays: " << rt.RayNum << std::endl;
                    //std::cout << "Total Rays: " << (rt.RayNum / 1'000'000)/DoubleFrameDuration << " MRays/s" << std::endl;
              //      //std::cout << "Average " << i << " Frames Duration: " << TotalFrameDuration / TotalFrame << std::endl;
                    //std::cout << "------------------------------" << std::endl;
 
             // EXPORT TO PNG
-            //      stbi_flip_vertically_on_write(1);
-                  //stbi_write_png("Frame.png", width, height, 3, ImageData.data(), width * 3);
 
             glClearColor(0, 0, 0, 1.0);
             glClear(GL_COLOR_BUFFER_BIT);
@@ -284,7 +290,7 @@ int main(int argc, char* argv[])
             wnd.Blit((float*)&framebufferCopy[0], width, height);
             wnd.SwapBuffers();
         }
-		std::cout << " Avg Frame: " << AvgFrame << " |" << std::endl;
+		//std::cout << " Avg Frame: " << AvgFrame << " |" << std::endl;
   //      TotalFrameDuration = 0;
   //      TotalFrame = 0;
   //      AvgFrame = 0;

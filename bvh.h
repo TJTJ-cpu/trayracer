@@ -26,7 +26,7 @@ public:
 	vec3 Min = vec3(0,0,0);
 	vec3 Max = vec3(0,0,0);
 	vec3 Center = (Min + Max) / 2;
-	bool bHasObject = false;
+	//bool bHasObject = false;
 
 	// Make the bouding box include the sphere that we pass in
 	void GrowToInclude(Sphere* sphere) {
@@ -38,10 +38,10 @@ public:
 		Max.y = std::max(Max.y, sphere->center.y + sphere->radius);
 		Max.z = std::max(Max.z, sphere->center.z + sphere->radius);
 		this->Center = (Min + Max) / 2;
-		this->bHasObject = true;
+		//this->bHasObject = true;
 	}
 
-	bool BoxIntersection(Ray ray) {
+	bool BoxIntersection(Ray ray, float maxDist) {
         float txMin = (this->Min.x - ray.Origin.x) * ray.InvRayDir.x;
         float txMax = (this->Max.x - ray.Origin.x) * ray.InvRayDir.x;
         float tyMin = (this->Min.y - ray.Origin.y) * ray.InvRayDir.y;
@@ -49,8 +49,16 @@ public:
         float tzMin = (this->Min.z - ray.Origin.z) * ray.InvRayDir.z;
         float tzMax = (this->Max.z - ray.Origin.z) * ray.InvRayDir.z;
 
-        float tMin = std::max(std::max(std::min(txMin, txMax), std::min(tyMin, tyMax)), std::min(tzMin, tzMax));
-        float tMax = std::min(std::min(std::max(txMin, txMax), std::max(tyMin, tyMax)), std::max(tzMin, tzMax));
+		// SWAP VALUES IF NECCESARY
+		if (txMin > txMax) std::swap(txMin, txMax);
+		if (tyMin > tyMax) std::swap(tyMin, tyMax);
+		if (tzMin > tzMax) std::swap(tzMin, tzMax);
+
+		float tMin = std::max({ txMin, tyMin, tzMin });
+		float tMax = std::min({ txMax, tyMax, tzMax });
+
+        //float tMin = std::max(std::max(std::min(txMin, txMax), std::min(tyMin, tyMax)), std::min(tzMin, tzMax));
+        //float tMax = std::min(std::min(std::max(txMin, txMax), std::max(tyMin, tyMax)), std::max(tzMin, tzMax));
 
         if (tMax < 0)
             return false;
@@ -58,16 +66,21 @@ public:
         if (tMin > tMax)
             return false;
 
+		if (tMin > maxDist)
+			return false;
+
         return true;
+	}
+
+	float DistanceTo(const vec3& point) const {
+		float dx = max(max(this->Min.x - point.x, 0.0f), point.x - this->Max.x);
+		float dy = max(max(this->Min.y - point.y, 0.0f), point.y - this->Max.y);
+		float dz = max(max(this->Min.z - point.z, 0.0f), point.z - this->Max.z);
+		return sqrt(dx * dx + dy * dy + dz * dz);
 	}
 
 	vec3 Size() {
 		return this->Max - this->Min;
-	}
-
-	int GetLargetstAxis() {
-		vec3 size = Size();
-		return size.x > max(size.y, size.z) ? 0 : size.y > size.z ? 1 : 2;
 	}
 
 	float SurfaceArea() {
@@ -234,18 +247,25 @@ public:
 		return totalCost;
 	}
 
-	/// TO DO
-	/*	
-	func that get volume from vec<sphere>
-
-	*/
+	void DestroyChildren() {
+		if (ChildA) {
+			ChildA->DestroyChildren();  // Recursively delete ChildA's children
+			delete ChildA;              // Delete ChildA
+			ChildA = nullptr;           // Avoid dangling pointer
+		}
+		if (ChildB) {
+			ChildB->DestroyChildren();  // Recursively delete ChildB's children
+			delete ChildB;              // Delete ChildB
+			ChildB = nullptr;           // Avoid dangling pointer
+		}
+	}
 
 
 	void SplitNode(Node* parent, int depth) {
-		const int MaxDepth = 4;
+		const int MaxDepth = 1;
 		//std::cout << "Depth: " << MaxDepth << std::endl;
 
-		if (depth == MaxDepth || !parent->bounds.bHasObject || parent->spheres.size() <= 5) {
+		if (depth == MaxDepth || parent->spheres.size() <= 4) {
 			return;
 		}
 
@@ -311,62 +331,5 @@ public:
 	bool bInAB(Sphere* sp, int axis, float Spos) {
 		return (sp->center[axis] - sp->radius < Spos) && (sp->center[axis] + sp->radius > Spos);
 	}
-
-
-	// old
-  //  bool bInAB(Sphere* sp, int axis, float Spos){
-		////std::cout << "bInAB: " << (sp->center[axis] - sp->radius) << " < " << Spos << " && " << (sp->center[axis] + sp->radius) << " > " << Spos << " => Condition: " << ((sp->center[axis] - sp->radius < Spos && sp->center[axis] + sp->radius > Spos) ? "true" : "false") << std::endl;
-  //      if (sp->center[axis] - sp->radius < Spos && sp->center[axis] + sp->radius > Spos)
-  //          return true;
-  //      return false;
-  //  }
-
-  //  bool bInB(Sphere* sp, int axis, float Spos){
-		////std::cout << "bInB: " << (sp->center[axis] - sp->radius) << " > " << Spos << " && " << (sp->center[axis] + sp->radius) << " > " << Spos << " => Condition: " << ((sp->center[axis] - sp->radius > Spos && sp->center[axis] + sp->radius > Spos) ? "true" : "false") << std::endl;
-  //      if (sp->center[axis] - sp->radius > Spos && sp->center[axis] + sp->radius > Spos)
-  //          return true;
-  //      return false;
-  //      
-  //  }
-
-  //  bool bInA(Sphere* sp, int axis, float Spos){
-		////std::cout << "bInA: " << (sp->center[axis] - sp->radius) << " < " << Spos << " && " << (sp->center[axis] + sp->radius) << " < " << Spos << " => Condition: " << ((sp->center[axis] - sp->radius < Spos && sp->center[axis] + sp->radius < Spos) ? "true" : "false") << std::endl;
-  //      if (sp->center[axis] - sp->radius < Spos && sp->center[axis] + sp->radius < Spos)
-  //          return true;
-  //      return false;
-  //      
-  //  }
-
-	//std::vector<Sphere*>& BVHIntersect(Node* parent, const Ray& ray) {
-	//void BVHIntersect(Node* parent, const Ray& ray, std::vector<Sphere*> &s) {
-	//	if (parent->ChildA == nullptr && parent->ChildB == nullptr) {
-	//		for (auto sp : parent->spheres)
-	//			s.push_back(sp);
-	//		//s.insert(s.end(), parent->spheres.begin(), parent->spheres.end());
-	//		return;
-	//	}
-
-	//	// Check intersection with ChildA's bounding box and recurse if hit
-	//	if (parent->ChildA && parent->ChildA->bounds.BoxIntersection(ray)) {
-	//		BVHIntersect(parent->ChildA, ray, s);
-	//	}
-
-	//	// Check intersection with ChildB's bounding box and recurse if hit
-	//	if (parent->ChildB && parent->ChildB->bounds.BoxIntersection(ray)) {
-	//		BVHIntersect(parent->ChildB, ray, s);
-	//	}
-
-	//}
 };
-
-
-
-
-
-
-
-
-
-
-
 

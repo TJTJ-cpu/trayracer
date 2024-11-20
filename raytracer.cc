@@ -200,17 +200,15 @@ Raytracer::BVHRaycast(Ray &ray, vec3& hitPoint, vec3& hitNormal, Object*& hitObj
         StackNode.pop();
             
         // CONTINUE IF IT DIDN'T HIT THE BOUNDING BOX
-        if (!curr->bounds.BoxIntersection(ray))
+        if (!curr->bounds.BoxIntersection(ray, closestHit.t))
             continue;
 
         // ITERATE THROUGHT THE LEAF NODE
         if (curr->IsLeaf()) 
             this->HitTest(curr, closestHit, ray);
-
-        // PUSH THE NODE TO THE STACK
         else {
-            StackNode.push(curr->ChildA);
-            StackNode.push(curr->ChildB);
+			StackNode.push(curr->ChildA);
+			StackNode.push(curr->ChildB);
         }
     }
 
@@ -218,8 +216,6 @@ Raytracer::BVHRaycast(Ray &ray, vec3& hitPoint, vec3& hitNormal, Object*& hitObj
     hitNormal = closestHit.normal;
     hitObject = closestHit.object;
     distance = closestHit.t;
-    //std::cout << "Spehre test count: " << test << std::endl;
-    test = 0;
     
     if (closestHit.object)
         return true;
@@ -230,11 +226,10 @@ Raytracer::BVHRaycast(Ray &ray, vec3& hitPoint, vec3& hitNormal, Object*& hitObj
 void 
 Raytracer::HitTest(Node*& node, HitResult& closestHit, Ray ray) {
     HitResult hit;
-    //std::cout << "Spheres Test Count: " << node->spheres.size() << std::endl;
+    //std::cout << "Spheres Test Count: " << node->sheres.size() << std::endl;
     for (Sphere* sphere : node->spheres)
     {
-        this->test++;
-        hit = sphere->Intersect(ray, hit.t);
+        hit = sphere->Intersect(ray, closestHit.t);
         if (hit.HasValue())
         {
             //assert(hit.t < closestHit.t);
@@ -293,18 +288,11 @@ Raytracer::QueueChunk(vec2& Chunk) {
 void 
 Raytracer::SpawnThread() {
     int Cores = std::thread::hardware_concurrency();
-     Cores  = 1;
+     //Cores  = 1;
     for (int i = 0; i < Cores; i++) {
         Threads.emplace_back(&Raytracer::ThreadLoop, this);
         ThreadCounts++;
     }
-}
-
-void
-Raytracer::SpawnOneThraed()
-{
-	Threads.emplace_back(&Raytracer::ThreadLoop, this);
-	ThreadCounts++;
 }
 
 void 
@@ -314,8 +302,6 @@ Raytracer::ThreadLoop() {
         {
             std::unique_lock<std::mutex> lock(QueueMutex);
             Mutex.wait(lock, [this] {
-                //std::cout << "Waiting: ChunkInfo.empty() = " << ChunkInfo.empty()
-                //    << ", ShouldTerminate = " << bShouldTerminate << std::endl;;
                 return !ChunkInfo.empty() || bShouldTerminate;
                 });
             if (bShouldTerminate)

@@ -29,7 +29,7 @@ public:
     std::queue<vec2> ChunkInfo;
 	std::mutex QueueMutex;
     void ThreadLoop();
-    unsigned int test = 0;
+    unsigned int Depth = 1;
 
     Node* MainNode;
     int MaxPixel;
@@ -40,7 +40,6 @@ public:
     // SETUP
     void SetUpNode(BoundingBox Box, std::vector<Sphere*> Spheres);
     void SpawnThread();
-    void SpawnOneThraed();
 
     // MULTI THREADING METHOD
     unsigned AssignJob();
