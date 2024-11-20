@@ -35,36 +35,19 @@ Raytracer::AssignJob()
 {
     // ThreadPool
     JobsCompleted.store(0);
-    // OLD
-    //int NumChunk = height / i;
-    //int ChunkSize = (height + NumChunk - 1) / NumChunk;
-    //int totalChunk = (height + ChunkSize - 1) / ChunkSize;
-    //int ChunkSize = (height + NumChunk - 1) / i;
-    /// FIND THE OPTIMAL NUMBER LATER 
     int NumChunk = 50;
     int ChunkSize = height / NumChunk;
-    // ROUND UP CHUNK
-    //int totalChunk = (height + ChunkSize - 1) / ChunkSize;
 
     for (int i = 0; i < NumChunk; i++) {
-		// min y
         float my = i * ChunkSize;
-		// max y
-        //float mx = min((i + 1) * ChunkSize, height);
-        // ENSURE THE LAST CHUNK INCLUDE ALL HEIGHT
         float mx = (i == NumChunk - 1) ? height : (i + 1) * ChunkSize;
-        //QueueJob(this, chunk);
         QueueChunk(vec2(my, mx));
     }
 
-    //while (AvailableThreads > 0)
     while (JobsCompleted < NumChunk) {
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
 
-
-    //std::cout << "Cur thread: " << JobsCompleted;
-    //std::cout << ", NumChunk: " << NumChunk << std::endl
     return RayNum;
 }
 
@@ -77,7 +60,7 @@ Raytracer::GetColor2(int x, int y){
         vec3 direction = vec3(u, v, -1.0f);
         direction = transform(direction, this->frustum);
         Ray ray(get_position(this->view), direction);
-        color += this->TracePath(ray, 0); // Recursive or iterative tracing
+        color += this->TracePath(ray, 0); 
     }
     return color;
 }
@@ -96,7 +79,6 @@ Color Raytracer::GetColor(float u, float v, int x, int y) {
 
 void
 Raytracer::AssignColor(Color &color, int x, int y) {
-    //std::cout << "x: " << x << ", y: " << std::endl;
 	color.r /= this->rpp;
 	color.g /= this->rpp;
 	color.b /= this->rpp;
@@ -141,7 +123,6 @@ Raytracer::Raytrace()
                 RayNum++;
             }
 
-            // divide by number of samples per pixel, to get the average of the distribution
             color.r /= this->rpp;
             color.g /= this->rpp;
             color.b /= this->rpp;
@@ -192,8 +173,6 @@ Raytracer::BVHRaycast(Ray &ray, vec3& hitPoint, vec3& hitNormal, Object*& hitObj
     HitResult closestHit;
     std::stack<Node*> StackNode;
     StackNode.push(this->MainNode);
-    //int numHits = 0;
-    //HitResult hit;
     Node* curr;
     while (!StackNode.empty()) {
         curr = StackNode.top();
@@ -226,13 +205,11 @@ Raytracer::BVHRaycast(Ray &ray, vec3& hitPoint, vec3& hitNormal, Object*& hitObj
 void 
 Raytracer::HitTest(Node*& node, HitResult& closestHit, Ray ray) {
     HitResult hit;
-    //std::cout << "Spheres Test Count: " << node->sheres.size() << std::endl;
     for (Sphere* sphere : node->spheres)
     {
         hit = sphere->Intersect(ray, closestHit.t);
         if (hit.HasValue())
         {
-            //assert(hit.t < closestHit.t);
             if (hit.t < closestHit.t) {
                 closestHit = hit;
                 closestHit.object = sphere;
@@ -244,7 +221,6 @@ Raytracer::HitTest(Node*& node, HitResult& closestHit, Ray ray) {
 void Raytracer::RayTraceChunk(vec2 &Chunk) {
     size_t MinY = Chunk.x;
     size_t MaxY = Chunk.y;
-    //std::cout << "MinY: " << MinY << ", MaxY: " << MaxY << std::endl;
 
     static int leet = 1337;
     std::mt19937 generator(leet++);
@@ -252,14 +228,10 @@ void Raytracer::RayTraceChunk(vec2 &Chunk) {
 
     for (int y = MinY; y < MaxY; y++) {
         for (int x = 0; x < this->width;x++) {
-			//std::cout << "x: " << x << ", y: "<< y << std::endl;
             Color color;
             for (int i = 0; i < this->rpp; i++) {
-                /// !!! CHECK WHICH IS BETTER LATER !!!
-                float u = ((float(x) + RandomFloat()) * (1.0f / this->width)) * 2.0f - 1.0f;
-                float v = ((float(y) + RandomFloat()) * (1.0f / this->width)) * 2.0f - 1.0f;
-                //float u = ((float(x) + dis(generator)) * (1.0f / this->width)) * 2.0f - 1.0f;
-                //float v = ((float(y) + dis(generator)) * (1.0f / this->height)) * 2.0f - 1.0f;
+                float u = ((float(x) + dis(generator)) * (1.0f / this->width)) * 2.0f - 1.0f;
+                float v = ((float(y) + dis(generator)) * (1.0f / this->height)) * 2.0f - 1.0f;
 
                 vec3 direction = vec3(u, v, -1.0f);
                 direction = transform(direction, this->frustum);
@@ -280,7 +252,6 @@ Raytracer::QueueChunk(vec2& Chunk) {
     {
         std::unique_lock<std::mutex> lock(QueueMutex);
         ChunkInfo.push(Chunk);
-        //std::cout << "Queued chunk: [" << Chunk.x << ", " << Chunk.y << "]" << std::endl;;
     }
     Mutex.notify_one();
 }

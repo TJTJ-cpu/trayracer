@@ -16,10 +16,10 @@
 
 int main(int argc, char* argv[])
 { 
-    unsigned w = 500;
-    unsigned h = 500;
-    int rpp = 5;
-    int ball = 500;
+    unsigned w = 1500;
+    unsigned h = 1500;
+    int rpp = 1;
+    int ball = 256;
     int mb = 5;
     for (int i = 0; i < argc; i++) {
         if (strcmp(argv[i], "-w") == 0) {
@@ -168,134 +168,87 @@ int main(int argc, char* argv[])
 
     std::vector<std::thread> Threads;
     /// SET UP BVH
-	auto start = std::chrono::high_resolution_clock::now();
-
     BoundingBox Box;
     rt.SetUpNode(Box, Spheres);
 
-	auto end = std::chrono::high_resolution_clock::now();
-	//std::chrono::duration<float> frameDuration = end - start;
-	//double DoubleFrameDuration = frameDuration.count();
-	 //std::cout << "------------------------------" << std::endl;
-  //  std::cout << "Time to create BVH: " << DoubleFrameDuration << std::endl;
 
-    //rt.MainNode->LevelOrderTraversal();
-
-
-	//std::cout << "------------------------------" << std::endl;
-	//std::cout << "Width: " << width << std::endl;
-	//std::cout << "Height: " << height << std::endl;
-	//std::cout << "Ray Per Pixel: " << RaysPerPixel << std::endl;
-	//std::cout << "Sphere Amount: " << SphereAmount << std::endl;
     /// RENDERING LOOP
-    std::chrono::high_resolution_clock::time_point start2; 
-    std::chrono::high_resolution_clock::time_point end2; 
-    double AvgFrame = 0;
-    //for (int cores = 1; cores < 101; cores++) {
-    //    std::cout << "|Chunk Division: " << cores;
-	  //while (wnd.IsOpen() && !exit)
-    std::cout << "Depth: "<< rt.Depth << std::endl;
-    std::cout << "<Frame, Duration(sec)>: " << std::endl;
-        for (int i = 1; i < 31; i++)
-        {
-            //std::cout << "Frame " << i << ": ";
-            std::cout << "<" << i << ", ";
-            resetFramebuffer = false;
-            moveDir = { 0,0,0 };
-            pitch = 0;
-            yaw = 0;
+	//while (wnd.IsOpen() && !exit)
+	{
+		resetFramebuffer = false;
+		moveDir = { 0,0,0 };
+		pitch = 0;
+		yaw = 0;
 
-            // poll input
-            wnd.Update();
+		// poll input
+		wnd.Update();
 
-            rotx -= pitch;
-            roty -= yaw;
+		rotx -= pitch;
+		roty -= yaw;
 
-            moveDir = normalize(moveDir);
+		moveDir = normalize(moveDir);
 
-            mat4 xMat = (rotationx(rotx));
-            mat4 yMat = (rotationy(roty));
-            mat4 cameraTransform = multiply(yMat, xMat);
+		mat4 xMat = (rotationx(rotx));
+		mat4 yMat = (rotationy(roty));
+		mat4 cameraTransform = multiply(yMat, xMat);
 
-            camPos = camPos + transform(moveDir * 0.2f, cameraTransform);
+		camPos = camPos + transform(moveDir * 0.2f, cameraTransform);
 
-            cameraTransform.m30 = camPos.x;
-            cameraTransform.m31 = camPos.y;
-            cameraTransform.m32 = camPos.z;
+		cameraTransform.m30 = camPos.x;
+		cameraTransform.m31 = camPos.y;
+		cameraTransform.m32 = camPos.z;
 
-            rt.SetViewMatrix(cameraTransform);
+		rt.SetViewMatrix(cameraTransform);
 
-            if (resetFramebuffer)
-            {
-                rt.Clear();
-                frameIndex = 0;
-            }
-            double RayNum;
-            auto start = std::chrono::high_resolution_clock::now();
-            //start2 = std::chrono::high_resolution_clock::now();
-            //RayNum = rt.Raytrace();
-            rt.AssignJob();
-            auto end = std::chrono::high_resolution_clock::now();
-            //end2 = std::chrono::high_resolution_clock::now();
-            std::chrono::duration<float> frameDuration = end - start;
-            double DoubleFrameDuration = frameDuration.count();
-            TotalFrameDuration += DoubleFrameDuration;
-            TotalFrame++;
-            AvgFrame = TotalFrameDuration / TotalFrame;
+		if (resetFramebuffer)
+		{
+			rt.Clear();
+			frameIndex = 0;
+		}
+		double RayNum;
+		auto start = std::chrono::high_resolution_clock::now();
+		rt.AssignJob();
+		auto end = std::chrono::high_resolution_clock::now();
+		std::chrono::duration<float> frameDuration = end - start;
 
-            frameIndex++;
-            // Get the average distribution of all samples
-            std::vector<uint8_t> ImageData;
-            {
-                size_t p = 0;
-                for (Color const& pixel : framebuffer)
-                {
-                    framebufferCopy[p] = pixel;
-                    framebufferCopy[p].r /= frameIndex;
-                    framebufferCopy[p].g /= frameIndex;
-                    framebufferCopy[p].b /= frameIndex;
-                    ImageData.push_back(255 * framebufferCopy[p].r);
-                    ImageData.push_back(255 * framebufferCopy[p].g);
-                    ImageData.push_back(255 * framebufferCopy[p].b);
-                    p++;
-                }
-            }
+		frameIndex++;
+		// Get the average distribution of all samples
+		std::vector<uint8_t> ImageData;
+		{
+			size_t p = 0;
+			for (Color const& pixel : framebuffer)
+			{
+				framebufferCopy[p] = pixel;
+				framebufferCopy[p].r /= frameIndex;
+				framebufferCopy[p].g /= frameIndex;
+				framebufferCopy[p].b /= frameIndex;
+				ImageData.push_back(255 * framebufferCopy[p].r);
+				ImageData.push_back(255 * framebufferCopy[p].g);
+				ImageData.push_back(255 * framebufferCopy[p].b);
+				p++;
+			}
+		}
 
-            // THIS IS BROKEN
-		    //stbi_flip_vertically_on_write(1);
-		    //stbi_write_png("Frame.png", width, height, 3, ImageData.data(), width * 3);
+		// EXPORT TO PNG
+		//stbi_flip_vertically_on_write(1);
+		//stbi_write_png("Frame.png", width, height, 3, ImageData.data(), width * 3);
 
-            //      std::cout << "Number of Cores: " << i;
-                  //end2 = std::chrono::high_resolution_clock::now();
-                  //std::chrono::duration<float> frameDuration2 = end2 - start2;
-                  //std::cout << " - Duration: " << frameDuration2.count() << " sec" << std::endl;
+	    // Printing Info
+	   std::cout << "Width: " << width << std::endl;
+	   std::cout << "Height: " << height << std::endl;
+	   std::cout << "Ray Per Pixel: " << RaysPerPixel << std::endl;
+	   std::cout << "Sphere Amount: " << SphereAmount << std::endl;
+	   std::cout << "Duration: " << frameDuration.count() << " sec" << std::endl;
+       std::cout << std::endl;
 
-                  // Printing Info
-                   //std::cout << "Width: " << width << std::endl;
-                   //std::cout << "Height: " << height << std::endl;
-                   //std::cout << "Ray Per Pixel: " << RaysPerPixel << std::endl;
-                   //std::cout << "Sphere Amount: " << SphereAmount << std::endl;
-                   //std::cout << "Duration: " << frameDuration.count() << " sec" << std::endl;
-                   std::cout <<  frameDuration.count() << ">, ";
-                   //std::cout << "Total Number of Rays: " << rt.RayNum << std::endl;
-                   //std::cout << "Total Rays: " << (rt.RayNum / 1'000'000)/DoubleFrameDuration << " MRays/s" << std::endl;
-             //      //std::cout << "Average " << i << " Frames Duration: " << TotalFrameDuration / TotalFrame << std::endl;
-                   //std::cout << "------------------------------" << std::endl;
 
-            // EXPORT TO PNG
+		glClearColor(0, 0, 0, 1.0);
+		glClear(GL_COLOR_BUFFER_BIT);
 
-            glClearColor(0, 0, 0, 1.0);
-            glClear(GL_COLOR_BUFFER_BIT);
-
-            wnd.Blit((float*)&framebufferCopy[0], width, height);
-            wnd.SwapBuffers();
-        }
-		//std::cout << " Avg Frame: " << AvgFrame << " |" << std::endl;
-  //      TotalFrameDuration = 0;
-  //      TotalFrame = 0;
-  //      AvgFrame = 0;
-  //  }
-
+		wnd.Blit((float*)&framebufferCopy[0], width, height);
+		wnd.SwapBuffers();
+	}
+       
     if (wnd.IsOpen())
         wnd.Close();
 

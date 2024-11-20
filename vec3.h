@@ -8,19 +8,11 @@
 class vec3
 {
 public:
-    explicit vec3(float a) : vec3(a, a, a) {};
+    double x, y, z;
 
-    vec3() : x(0), y(0), z(0)
-    {
-        //this->UpdateIsNormalizedVariable();
-        //this->UpdateIsZeroVariable();
-    }
-
-    vec3(double x, double y, double z) : x(x), y(y), z(z)
-    {
-        //this->UpdateIsNormalizedVariable();
-        //this->UpdateIsZeroVariable();
-    }
+    vec3(float a) : vec3(a, a, a) {};
+    vec3() : x(0), y(0), z(0) {}
+    vec3(double x, double y, double z) : x(x), y(y), z(z) {}
 
 
     vec3(std::initializer_list<double> const il)
@@ -48,8 +40,6 @@ public:
         this->y = rhs.y;
         this->z = rhs.z;
 
-        //this->UpdateIsNormalizedVariable();
-        //this->UpdateIsZeroVariable();
     }
 
     vec3 operator+(vec3 const& rhs) { return {x + rhs.x, y + rhs.y, z + rhs.z};}
@@ -81,30 +71,12 @@ public:
             assert(false && "Out of bound");
     }
 
-
-    double x, y, z;
-
-    //bool IsNormalized()
-    //{
-    //    return this->isNormalized;
-    //}
-
-    //bool IsZero()
-    //{
-    //    return this->isZero;
-    //}
-
-private:
 };
 
 // Get length of 3D vector
 inline double len(vec3 const& v)
 {
-    //double a = v.x * v.x;
-    //a = a + v.y * v.y;
-    //a = a + v.z * v.z;
-    //double l = sqrt(a);
-    //return l;
+
     return float(sqrt(v.x * v.x + v.y * v.y + v.z * v.z));
 }
 
@@ -140,28 +112,6 @@ inline vec3 max(const vec3& a, const vec3& b) {
 inline int max(const int& a, const int& b) {
     return a >= b ? a : b;
 }
-
-//inline void vec3::UpdateIsNormalizedVariable()
-//{
-//    if (len(*this) == 1.0)
-//    {
-//        this->isNormalized = true;
-//        return;
-//    }
-//    
-//    this->isNormalized = false;
-//}
-//
-//inline void vec3::UpdateIsZeroVariable()
-//{
-//    if (len(*this) == 0.0)
-//    {
-//        this->isZero = true;
-//        return;
-//    }
-//    
-//    this->isZero = false;
-//}
 
 // piecewise multiplication between two vectors
 inline vec3 mul(vec3 a, vec3 b)

@@ -26,7 +26,6 @@ public:
 	vec3 Min = vec3(0,0,0);
 	vec3 Max = vec3(0,0,0);
 	vec3 Center = (Min + Max) / 2;
-	//bool bHasObject = false;
 
 	// Make the bouding box include the sphere that we pass in
 	void GrowToInclude(Sphere* sphere) {
@@ -49,16 +48,8 @@ public:
         float tzMin = (this->Min.z - ray.Origin.z) * ray.InvRayDir.z;
         float tzMax = (this->Max.z - ray.Origin.z) * ray.InvRayDir.z;
 
-		// SWAP VALUES IF NECCESARY
-		if (txMin > txMax) std::swap(txMin, txMax);
-		if (tyMin > tyMax) std::swap(tyMin, tyMax);
-		if (tzMin > tzMax) std::swap(tzMin, tzMax);
-
-		float tMin = std::max({ txMin, tyMin, tzMin });
-		float tMax = std::min({ txMax, tyMax, tzMax });
-
-        //float tMin = std::max(std::max(std::min(txMin, txMax), std::min(tyMin, tyMax)), std::min(tzMin, tzMax));
-        //float tMax = std::min(std::min(std::max(txMin, txMax), std::max(tyMin, tyMax)), std::max(tzMin, tzMax));
+        float tMin = std::max(std::max(std::min(txMin, txMax), std::min(tyMin, tyMax)), std::min(tzMin, tzMax));
+        float tMax = std::min(std::min(std::max(txMin, txMax), std::max(tyMin, tyMax)), std::max(tzMin, tzMax));
 
         if (tMax < 0)
             return false;
@@ -142,45 +133,6 @@ public:
 		return left + right + 1;
 	}
 
-	void FindNoOverlapSplit(Node* Root, int& SplitAxis, float& SplitPos) {
-		int Iter = 50000;
-		int CurrentBestResult = 2147483647;
-		float Candidate, Length;
-		float BestCadidate = FLT_MAX;
-		int Result;
-		for (int j = 0; j < 3; j++) {
-			float Scale = (this->bounds.Max[j] - this->bounds.Min[j]) / Iter;
-			Length = this->bounds.Max[j] - this->bounds.Min[j];
-			for (int i = 0; i < Iter; i++) {
-				Candidate = (Length / Iter) * i;
-				Result = EvaluateNoOverlapSplit(Root, j, Candidate);
-				if (Result < CurrentBestResult) {
-					SplitAxis = j;
-					SplitPos = Candidate;
-					CurrentBestResult = Result;
-				}
-			}
-		}
-
-	}
-
-	int EvaluateNoOverlapSplit(Node* RootAxis, int Axis, float Pos) {
-		int MaxSpheres = RootAxis->spheres.size();
-		int IdealSphere = MaxSpheres / 2;
-		std::vector<Sphere*> Spheres;
-
-		for (auto sphere : RootAxis->spheres) {
-			if (bInAB(sphere, Axis, Pos))
-				return 2147483647;
-
-			if (bInA(sphere, Axis, Pos)) 
-				Spheres.push_back(sphere);
-		}
-
-		int Result = IdealSphere - Spheres.size();
-		return abs(Result);
-	}
-
 	void FindBestSplit(Node* Root, int &SplitAxis, float &SplitPos) {
 		int Iter = 10000;
 		int CurrentBestResult = 2147483647;
@@ -200,7 +152,6 @@ public:
 				}
 			}
 		}
-		//BVHTEST(Root, SplitAxis, SplitPos);
 	}	
 	
 	void NormalSplit(Node* Root, int &SplitAxis, float &SplitPos) {
@@ -210,9 +161,6 @@ public:
 	}
 
 	float EvaluateSplit(Node* RootAxis, int Axis, float Pos) {
-		//int MaxSpheres = RootAxis->spheres.size();
-		//int IdealSphere = MaxSpheres / 2;
-		//std::vector<Sphere*> Spheres;
 		Node ASpheres;
 		Node BSpheres;
 		unsigned int OverlappedCount = 0;
@@ -233,6 +181,8 @@ public:
 				assert(false && "ERROR :: SPLITFUNCTION :: NO SUBDIVISION");
 			}
 		}
+
+		// SURFACE AREA HEURISTIC
 		float surfaceAreaA = ASpheres.bounds.SurfaceArea();
 		float surfaceAreaB = BSpheres.bounds.SurfaceArea();
 		float surfaceAreaParent = RootAxis->bounds.SurfaceArea();
@@ -247,23 +197,8 @@ public:
 		return totalCost;
 	}
 
-	void DestroyChildren() {
-		if (ChildA) {
-			ChildA->DestroyChildren();  // Recursively delete ChildA's children
-			delete ChildA;              // Delete ChildA
-			ChildA = nullptr;           // Avoid dangling pointer
-		}
-		if (ChildB) {
-			ChildB->DestroyChildren();  // Recursively delete ChildB's children
-			delete ChildB;              // Delete ChildB
-			ChildB = nullptr;           // Avoid dangling pointer
-		}
-	}
-
-
 	void SplitNode(Node* parent, int depth) {
-		const int MaxDepth = 1;
-		//std::cout << "Depth: " << MaxDepth << std::endl;
+		const int MaxDepth = 4;
 
 		if (depth == MaxDepth || parent->spheres.size() <= 4) {
 			return;
@@ -273,27 +208,11 @@ public:
 		float SplitPos;
 
 		FindBestSplit(parent, SpiltAxis, SplitPos);
-		//NormalSplit(parent, SpiltAxis, SplitPos);
-		//FindNoOverlapSplit(parent, SpiltAxis, SplitPos);
 		parent->ChildA = new Node();
 		parent->ChildB = new Node();
-		//std::cout << std::endl;
-		//std::cout << "SpiltAxis: " << SpiltAxis << std::endl;
-		//std::cout << "SplitPos: " << SplitPos << std::endl;
 		for (auto sphere : parent->spheres) {
 			vec3 size;
 			size = sphere->center;
-			//std::cout << "Sphe/*re Center: ";
-			//std::cout << "x: " << size.x << ", y: " << size.y << ", z: " << size.z << std::endl;
-			//std::cout << "Sphre Rad: " << sphere->radius << std::endl;
-			//std::cout << "SpiltAxis: " << SpiltAxis << std::endl;
-			//std::cout << "SplitPos*/: " << SplitPos << std::endl;
-			// Center Split
-			//if (sphere->center[SpiltAxis] <= SplitPos)
-			//	parent->ChildA->AddSphere(sphere);
-			//else if (sphere->center[SpiltAxis] > SplitPos)
-			//	parent->ChildB->AddSphere(sphere);
-			//std::cout << std::endl;
             if (bInA(sphere, SpiltAxis, SplitPos)) {
 				parent->ChildA->AddSphere(sphere);
 			}
@@ -306,15 +225,6 @@ public:
             } else {
 				assert(false && "ERROR :: SPLITFUNCTION :: NO SUBDIVISION");
             }
-			//std::cout << "Child A Size: " << parent->ChildA->spheres.size() << std::endl;
-			//std::cout << "Child B Size: " << parent->ChildB->spheres.size() << std::endl;
-			//std::cout << std::endl;
-			//vec3 min = parent->ChildA->bounds.Min;
-			//vec3 max = parent->ChildA->bounds.Max;
-			//vec3 diff = max - min;
-			//float length = std::sqrt(diff.x * diff.x + diff.y * diff.y + diff.z * diff.z);
-			//size = Child->bounds.Size();
-			//std::cout << "x: " << size.x << ", y: " << size.y << ", z: " << size.z << std::endl;
 		}
 		SplitNode(parent->ChildA, depth + 1);
 		SplitNode(parent->ChildB, depth + 1);

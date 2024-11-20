@@ -48,7 +48,6 @@ public:
 
 	HitResult Intersect(Ray ray, float maxDist) override
     {
-        //float maxDist = FLT_MAX;
         HitResult hit;
         vec3 oc = ray.Origin - this->center;
         vec3 dir = ray.RayDir;
